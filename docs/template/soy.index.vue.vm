@@ -26,8 +26,8 @@ const {
 } = useTable({
   apiFn: fetchGet${BusinessName}List,
   apiParams: {
-    current: 1,
-    size: 10,
+    pageNum: 1,
+    pageSize: 10,
     // if you want to use the searchParams in Form, you need to define the following properties, and the value is null
     // the value can not be undefined, otherwise the property in Form will not be reactive
 #foreach ($column in $columns)
@@ -109,7 +109,7 @@ async function handleDelete(#foreach($column in $columns)#if($column.isPk == '1'
   onDeleted();
 }
 
-async function edit(id: CommonType.IdType) {
+async function edit(#foreach($column in $columns)#if($column.isPk == '1')$column.javaField#end#end: CommonType.IdType) {
   handleEdit('#foreach($column in $columns)#if($column.isPk == '1')$column.javaField#end#end', #foreach($column in $columns)#if($column.isPk == '1')$column.javaField#end#end);
 }
 </script>
