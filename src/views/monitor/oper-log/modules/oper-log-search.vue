@@ -1,14 +1,10 @@
 <script setup lang="ts">
 import { useNaiveForm } from '@/hooks/common/form';
-import { useDict } from '@/hooks/business/dict';
 import { $t } from '@/locales';
 
 defineOptions({
   name: 'OperLogSearch'
 });
-
-useDict('sys_oper_type');
-useDict('sys_common_status');
 
 interface Emits {
   (e: 'reset'): void;

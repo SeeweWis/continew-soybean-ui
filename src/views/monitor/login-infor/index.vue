@@ -91,7 +91,7 @@ const {
       minWidth: 120,
       render: row => {
         return (
-          <div class="flex items-center gap-2">
+          <div class="flex items-center justify-center gap-2">
             <SvgIcon icon={getBrowserIcon(row.browser)} />
             {row.browser}
           </div>
@@ -109,7 +109,7 @@ const {
       render: row => {
         const osName = row.os?.split(' or ')[0] ?? '';
         return (
-          <div class="flex items-center gap-2">
+          <div class="flex items-center justify-center gap-2">
             <SvgIcon icon={getOsIcon(osName)} />
             {osName}
           </div>
