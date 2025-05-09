@@ -2,8 +2,7 @@
 import { onMounted, ref, useAttrs } from 'vue';
 import type { TreeOption, TreeSelectInst, TreeSelectProps } from 'naive-ui';
 import { useBoolean } from '@sa/hooks';
-import { fetchGetMenuList } from '@/service/api/system';
-import { handleTree } from '@/utils/common';
+import { fetchGetMenuTreeSelect } from '@/service/api/system';
 import SvgIcon from '@/components/custom/svg-icon.vue';
 
 defineOptions({ name: 'MenuTree' });
@@ -18,26 +17,27 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const { bool: expandAll } = useBoolean();
-const { bool: cascade } = useBoolean(true);
 const { bool: checkAll } = useBoolean();
+const expandedKeys = ref<CommonType.IdType[]>([0]);
 
 const menuTreeRef = ref<TreeSelectInst | null>(null);
 const value = defineModel<CommonType.IdType[]>('value', { required: false, default: [] });
 const options = defineModel<Api.System.MenuList>('options', { required: false, default: [] });
+const cascade = defineModel<boolean>('cascade', { required: false, default: true });
 const loading = defineModel<boolean>('loading', { required: false, default: false });
 
 const attrs: TreeSelectProps = useAttrs();
 
 async function getMenuList() {
   loading.value = true;
-  const { error, data } = await fetchGetMenuList();
+  const { error, data } = await fetchGetMenuTreeSelect();
   if (error) return;
   options.value = [
     {
-      menuId: 0,
-      menuName: '根目录',
+      id: 0,
+      label: '根目录',
       icon: 'material-symbols:home-outline-rounded',
-      children: handleTree(data, { idField: 'menuId', filterFn: item => item.menuType !== 'F' })
+      children: data
     }
   ] as Api.System.MenuList;
   loading.value = false;
@@ -51,8 +51,11 @@ onMounted(() => {
 
 function renderPrefix({ option }: { option: TreeOption }) {
   const renderLocalIcon = String(option.icon).startsWith('icon-');
-  const icon = renderLocalIcon ? undefined : String(option.icon);
+  let icon = renderLocalIcon ? undefined : String(option.icon ?? 'material-symbols:buttons-alt-outline-rounded');
   const localIcon = renderLocalIcon ? String(option.icon).replace('icon-', 'menu-') : undefined;
+  if (icon === '#') {
+    icon = 'material-symbols:buttons-alt-outline-rounded';
+  }
   return <SvgIcon icon={icon} localIcon={localIcon} />;
 }
 
@@ -109,17 +112,18 @@ defineExpose({
       <NTree
         ref="menuTreeRef"
         v-model:checked-keys="value"
+        v-model:expanded-keys="expandedKeys"
         multiple
         checkable
-        key-field="menuId"
-        label-field="menuName"
+        :selectable="false"
+        key-field="id"
+        label-field="label"
         :data="options"
         :cascade="cascade"
         :loading="loading"
         virtual-scroll
-        :check-strategy="cascade ? 'child' : 'all'"
+        check-strategy="all"
         :default-expand-all="expandAll"
-        :default-expanded-keys="[0]"
         :render-prefix="renderPrefix"
         v-bind="attrs"
       />
