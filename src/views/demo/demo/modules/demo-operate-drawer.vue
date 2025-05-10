@@ -32,8 +32,8 @@ const { createRequiredRule } = useFormRules();
 
 const title = computed(() => {
   const titles: Record<NaiveUI.TableOperateType, string> = {
-    add: '新增测试单',
-    edit: '编辑测试单'
+    add: '新增测试单表',
+    edit: '编辑测试单表'
   };
   return titles[props.operateType];
 });

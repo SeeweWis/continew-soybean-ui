@@ -174,13 +174,13 @@ async function addInRow(row: TableDataWithIndex<Api.System.Dept>) {
           @refresh="getData"
         >
           <template #prefix>
-            <NButton v-if="!isCollapse" :disabled="!expandedRowKeys.length" size="small" @click="expandAll">
+            <NButton v-if="!isCollapse" :disabled="!data.length" size="small" @click="expandAll">
               <template #icon>
                 <icon-quill:expand />
               </template>
               全部展开
             </NButton>
-            <NButton v-if="isCollapse" :disabled="!expandedRowKeys.length" size="small" @click="collapseAll">
+            <NButton v-if="isCollapse" :disabled="!data.length" size="small" @click="collapseAll">
               <template #icon>
                 <icon-quill:collapse />
               </template>
@@ -190,6 +190,7 @@ async function addInRow(row: TableDataWithIndex<Api.System.Dept>) {
         </TableHeaderOperation>
       </template>
       <NDataTable
+        v-model:expanded-row-keys="expandedRowKeys"
         :columns="columns"
         :data="data"
         size="small"
@@ -198,9 +199,7 @@ async function addInRow(row: TableDataWithIndex<Api.System.Dept>) {
         :loading="loading"
         :indent="28"
         :row-key="row => row.deptId"
-        :expanded-row-keys="expandedRowKeys"
         class="sm:h-full"
-        @update:expanded-row-keys="keys => (expandedRowKeys = keys)"
       />
       <DeptOperateDrawer
         v-model:visible="drawerVisible"
