@@ -36,10 +36,10 @@ async function search() {
       <NCollapseItem :title="$t('common.search')" name="user-search">
         <NForm ref="formRef" :model="model" label-placement="left" :label-width="80">
           <NGrid responsive="screen" item-responsive>
-            <NFormItemGi span="24 s:12 m:6" label="部门名称" path="deptName" class="pr-24px">
+            <NFormItemGi span="8" label="部门名称" path="deptName" class="pr-24px">
               <NInput v-model:value="model.deptName" placeholder="请输入部门名称" />
             </NFormItemGi>
-            <NFormItemGi span="24 s:12 m:6" label="部门状态" path="status" class="pr-24px">
+            <NFormItemGi span="8 " label="部门状态" path="status" class="pr-24px">
               <NSelect
                 v-model:value="model.status"
                 placeholder="请选择部门状态"
@@ -47,7 +47,7 @@ async function search() {
                 clearable
               />
             </NFormItemGi>
-            <NFormItemGi span="24" class="pr-24px">
+            <NFormItemGi span="8" class="pr-24px">
               <NSpace class="w-full" justify="end">
                 <NButton @click="reset">
                   <template #icon>
