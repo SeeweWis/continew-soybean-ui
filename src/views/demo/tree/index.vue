@@ -51,13 +51,6 @@ const {
       width: 48
     },
     {
-      key: 'index',
-      title: $t('common.index'),
-      align: 'center',
-      width: 64,
-      render: (_, index) => index + 1
-    },
-    {
       key: 'id',
       title: '主键',
       align: 'center',
@@ -219,7 +212,7 @@ function handleExport() {
         v-model:expanded-row-keys="expandedRowKeys"
         :columns="columns"
         :data="data"
-        :indent="32"
+        :indent="64"
         :flex-height="!appStore.isMobile"
         :scroll-x="scrollX"
         :loading="loading"
