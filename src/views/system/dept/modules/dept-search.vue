@@ -10,7 +10,6 @@ defineOptions({
 });
 
 interface Emits {
-  (e: 'reset'): void;
   (e: 'search'): void;
 }
 
@@ -31,7 +30,7 @@ function resetModel() {
 async function reset() {
   await restoreValidation();
   resetModel();
-  emit('reset');
+  emit('search');
 }
 
 async function search() {
