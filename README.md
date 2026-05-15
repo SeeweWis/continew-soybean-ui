@@ -254,7 +254,7 @@ pnpm build
 
 <div>
   <p>飞书群</p>
-  <img src="https://soybeanjs-1300612522.cos.ap-guangzhou.myqcloud.com/uPic/feishu-soybean-admin.png" style="width:200px" />
+  <img src="https://soybeanjs-1300612522.cos.ap-guangzhou.myqcloud.com/uPic/feishu-soybean-admin.png?v=202605151546" style="width:200px" />
 </div>
 
 ## Star 趋势
