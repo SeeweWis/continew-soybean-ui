@@ -5,8 +5,6 @@ import { useLoading } from '@sa/hooks';
 import { fetchUpdateUserPassword, fetchUpdateUserProfile } from '@/service/api/system';
 import { useAuthStore } from '@/store/modules/auth';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
-import OnlineTable from './modules/online-table.vue';
-import SocialCard from './modules/social-card.vue';
 import UserAvatar from './modules/user-avatar.vue';
 
 defineOptions({
@@ -38,10 +36,10 @@ const passwordModel: PasswordModel = reactive(createDefaultPasswordModel());
 
 function createDefaultProfileModel(): ProfileModel {
   return {
-    nickName: userInfo.user?.nickName || '',
-    email: userInfo.user?.email || '',
-    phonenumber: userInfo.user?.phonenumber || '',
-    sex: userInfo.user?.sex || '0'
+    nickName: userInfo.nickname || '',
+    email: userInfo.email || '',
+    phonenumber: userInfo.phone || '',
+    sex: String(userInfo.gender ?? 0)
   };
 }
 
@@ -76,10 +74,13 @@ async function updateProfile() {
   if (!error) {
     window.$message?.success('更新成功');
     // 更新本地用户信息
-    if (userInfo.user) {
-      Object.assign(userInfo.user, profileModel);
-      profileRestoreValidation();
-    }
+    Object.assign(userInfo, {
+      nickname: profileModel.nickName,
+      email: profileModel.email,
+      phone: profileModel.phonenumber,
+      gender: Number(profileModel.sex) as 0 | 1 | 2
+    });
+    profileRestoreValidation();
   }
   endBtnLoading();
 }
@@ -112,28 +113,28 @@ async function updatePassword() {
           <div class="relative">
             <UserAvatar />
           </div>
-          <div class="text-18px font-medium">{{ userInfo.user?.nickName }}</div>
-          <div class="text-14px text-gray-500">{{ userInfo.user?.userName }}</div>
+          <div class="text-18px font-medium">{{ userInfo.nickname }}</div>
+          <div class="text-14px text-gray-500">{{ userInfo.username }}</div>
         </div>
         <NDescriptions :column="1" label-placement="left" label-width="120px">
           <NDescriptionsItem label="手机号码">
-            <div class="text-14px">{{ userInfo.user?.phonenumber }}</div>
+            <div class="text-14px">{{ userInfo.phone }}</div>
           </NDescriptionsItem>
           <NDescriptionsItem label="用户邮箱">
-            <div class="text-14px">{{ userInfo.user?.email }}</div>
+            <div class="text-14px">{{ userInfo.email }}</div>
           </NDescriptionsItem>
           <NDescriptionsItem label="所属部门">
-            <div class="text-14px">{{ userInfo.user?.deptName }}</div>
+            <div class="text-14px">{{ userInfo.deptName }}</div>
           </NDescriptionsItem>
           <NDescriptionsItem label="所属角色">
             <NSpace>
-              <NTag v-for="role in userInfo.user?.roles" :key="role.roleId" type="primary" size="small">
-                {{ role.roleName }}
+              <NTag v-for="role in userInfo.roleNames" :key="role" type="primary" size="small">
+                {{ role }}
               </NTag>
             </NSpace>
           </NDescriptionsItem>
           <NDescriptionsItem label="创建日期">
-            <div class="text-14px">{{ userInfo.user?.createTime }}</div>
+            <div class="text-14px">{{ userInfo.registrationDate }}</div>
           </NDescriptionsItem>
         </NDescriptions>
       </div>
@@ -218,14 +219,6 @@ async function updatePassword() {
               </NButton>
             </NFormItem>
           </NForm>
-        </NTabPane>
-        <NTabPane name="social" tab="第三方应用">
-          <SocialCard />
-        </NTabPane>
-        <NTabPane name="online" tab="在线设备">
-          <div class="h-full">
-            <OnlineTable />
-          </div>
         </NTabPane>
       </NTabs>
     </NCard>

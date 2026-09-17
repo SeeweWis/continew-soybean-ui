@@ -1,22 +1,21 @@
-<script setup lang="tsx">
-import { computed, ref, watch } from 'vue';
-import { NTag } from 'naive-ui';
+<script setup lang="ts">
+import { ref, watch } from 'vue';
 import { jsonClone } from '@sa/utils';
-import { fetchCreateDictData, fetchUpdateDictData } from '@/service/api/system/dict-data';
-import { useFormRules, useNaiveForm } from '@/hooks/common/form';
-import { useDict } from '@/hooks/business/dict';
+import { fetchCreateDictItem, fetchUpdateDictItem } from '@/service/api/system';
+import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 
 defineOptions({
   name: 'DictDataOperateDrawer'
 });
-useDict('sys_yes_no');
+
 interface Props {
   /** the type of operation */
   operateType: NaiveUI.TableOperateType;
   /** the edit row data */
-  rowData?: Api.System.DictData | null;
-  dictType: string;
+  rowData?: Api.System.ContinewDictItem | null;
+  /** 所属字典 */
+  dict?: Api.System.ContinewDict | null;
 }
 
 const props = defineProps<Props>();
@@ -32,57 +31,45 @@ const visible = defineModel<boolean>('visible', {
 });
 
 const { formRef, validate, restoreValidation } = useNaiveForm();
-const { createRequiredRule } = useFormRules();
 
-const title = computed(() => {
-  const titles: Record<NaiveUI.TableOperateType, string> = {
-    add: $t('page.system.dict.addDictData'),
-    edit: $t('page.system.dict.editDictData')
-  };
-  return titles[props.operateType];
-});
-
-type Model = Api.System.DictDataOperateParams;
+type Model = {
+  label: string;
+  value: string;
+  color: string | null;
+  sort: number | null;
+  description: string | null;
+  status: number;
+};
 
 const model = ref<Model>(createDefaultModel());
 
-const listClassOptions: Record<string, string>[] = [
-  { label: 'Text', value: 'text' },
-  { label: 'Default', value: 'default' },
-  { label: 'Tertiary', value: 'tertiary' },
-  { label: 'Primary', value: 'primary' },
-  { label: 'Info', value: 'info' },
-  { label: 'Success', value: 'success' },
-  { label: 'Warning', value: 'warning' },
-  { label: 'Error', value: 'error' }
-];
-
 function createDefaultModel(): Model {
   return {
-    dictSort: 0,
-    dictLabel: '',
-    dictValue: '',
-    dictType: props.dictType,
-    cssClass: '',
-    listClass: null,
-    remark: '',
-    isDefault: 'N'
+    label: '',
+    value: '',
+    color: null,
+    sort: 999,
+    description: null,
+    status: 1
   };
 }
 
-type RuleKey = Extract<keyof Model, 'dictCode' | 'dictLabel' | 'dictValue'>;
+type RuleKey = Extract<keyof Model, 'label' | 'value'>;
 
-const rules: Record<RuleKey, App.Global.FormRule> = {
-  dictCode: createRequiredRule($t('page.system.dict.form.dictCode.invalid')),
-  dictLabel: createRequiredRule($t('page.system.dict.form.dictLabel.invalid')),
-  dictValue: createRequiredRule($t('page.system.dict.form.dictValue.invalid'))
+const rules: Record<RuleKey, App.Global.FormRule[]> = {
+  label: [{ required: true, message: '请输入标签' }],
+  value: [{ required: true, message: '请输入键值' }]
 };
 
 function handleUpdateModelWhenEdit() {
-  model.value = createDefaultModel();
+  if (props.operateType === 'add') {
+    model.value = createDefaultModel();
+    return;
+  }
 
   if (props.operateType === 'edit' && props.rowData) {
     Object.assign(model.value, jsonClone(props.rowData));
+    model.value.value = String(props.rowData.value ?? '');
   }
 }
 
@@ -93,36 +80,27 @@ function closeDrawer() {
 async function handleSubmit() {
   await validate();
 
-  const { dictCode, dictSort, dictLabel, dictValue, dictType, cssClass, listClass, isDefault, remark } = model.value;
+  const { label, value, color, sort, description, status } = model.value;
+
+  const data: Api.System.ContinewDictItemReq = {
+    label,
+    value,
+    color: color ?? undefined,
+    sort: sort ?? undefined,
+    description: description ?? undefined,
+    status: status as 1 | 2,
+    dictId: props.operateType === 'add' ? props.dict!.id : props.rowData!.dictId
+  };
 
   // request
   if (props.operateType === 'add') {
-    const { error } = await fetchCreateDictData({
-      dictSort,
-      dictLabel,
-      dictValue,
-      dictType,
-      cssClass,
-      listClass,
-      isDefault,
-      remark
-    });
+    const { error } = await fetchCreateDictItem(data);
     if (error) return;
     window.$message?.success($t('common.addSuccess'));
   }
 
   if (props.operateType === 'edit') {
-    const { error } = await fetchUpdateDictData({
-      dictCode,
-      dictSort,
-      dictLabel,
-      dictValue,
-      dictType,
-      cssClass,
-      listClass,
-      isDefault,
-      remark
-    });
+    const { error } = await fetchUpdateDictItem(props.rowData!.id, data);
     if (error) return;
     window.$message?.success($t('common.updateSuccess'));
   }
@@ -137,67 +115,40 @@ watch(visible, () => {
     restoreValidation();
   }
 });
-
-function renderTagLabel(option: { label: string; value: string }) {
-  if (option.value === 'text') {
-    return option.label;
-  }
-  return (
-    <NTag size="small" type={option.value as any}>
-      {option.label}
-    </NTag>
-  );
-}
 </script>
 
 <template>
-  <NDrawer v-model:show="visible" :title="title" display-directive="show" :width="800" class="max-w-90%">
-    <NDrawerContent :title="title" :native-scrollbar="false" closable>
+  <NDrawer v-model:show="visible" display-directive="show" :width="480" class="max-w-90%">
+    <NDrawerContent :title="$t('page.system.dict.data.title')" :native-scrollbar="false" closable>
       <NForm ref="formRef" :model="model" :rules="rules">
-        <NFormItem :label="$t('page.system.dict.dictType')" path="dictType">
-          <NInput
-            v-model:value="model.dictType"
-            disabled
-            :placeholder="$t('page.system.dict.form.dictType.required')"
-          />
+        <NFormItem :label="$t('page.system.dict.data.label')" path="label">
+          <NInput v-model:value="model.label" placeholder="请输入标签" />
         </NFormItem>
-        <NFormItem :label="$t('page.system.dict.data.listClass')" path="listClass">
+        <NFormItem :label="$t('page.system.dict.data.value')" path="value">
+          <NInput v-model:value="model.value" placeholder="请输入键值" />
+        </NFormItem>
+        <NFormItem label="颜色" path="color">
           <NSelect
-            v-model:value="model.listClass"
+            v-model:value="model.color"
             clearable
-            :options="listClassOptions"
-            :placeholder="$t('page.system.dict.form.listClass.required')"
-            :render-label="renderTagLabel"
+            placeholder="请选择标签颜色"
+            :options="['default', 'primary', 'info', 'success', 'warning', 'error'].map(v => ({ label: v, value: v }))"
           />
         </NFormItem>
-        <NFormItem :label="$t('page.system.dict.data.label')" path="dictLabel">
-          <NInput v-model:value="model.dictLabel" :placeholder="$t('page.system.dict.form.dictLabel.required')" />
+        <NFormItem label="排序" path="sort">
+          <NInputNumber v-model:value="model.sort" class="w-full" placeholder="请输入排序" />
         </NFormItem>
-        <NFormItem :label="$t('page.system.dict.data.value')" path="dictValue">
-          <NInput v-model:value="model.dictValue" :placeholder="$t('page.system.dict.form.dictValue.required')" />
+        <NFormItem label="状态" path="status">
+          <DictRadio v-model:value="model.status" dict-code="dis_enable_status" />
         </NFormItem>
-        <NFormItem :label="$t('page.system.dict.data.cssClass')" path="cssClass">
-          <NInput v-model:value="model.cssClass" :placeholder="$t('page.system.dict.form.cssClass.required')" />
-        </NFormItem>
-        <NFormItem :label="$t('page.system.dict.data.dictSort')" path="dictSort">
-          <NInputNumber v-model:value="model.dictSort" :placeholder="$t('page.system.dict.form.dictSort.required')" />
-        </NFormItem>
-        <NFormItem :label="$t('page.system.dict.data.isDefault')" path="isDefault">
-          <DictRadio v-model:value="model.isDefault" dict-code="sys_yes_no" />
-        </NFormItem>
-        <NFormItem :label="$t('page.system.dict.data.remark')" path="remark">
-          <NInput
-            v-model:value="model.remark"
-            :rows="3"
-            type="textarea"
-            :placeholder="$t('page.system.dict.form.remark.required')"
-          />
+        <NFormItem :label="$t('page.system.dict.data.remark')" path="description">
+          <NInput v-model:value="model.description" placeholder="请输入描述" />
         </NFormItem>
       </NForm>
       <template #footer>
         <NSpace :size="16">
           <NButton @click="closeDrawer">{{ $t('common.cancel') }}</NButton>
-          <NButton type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</NButton>
+          <NButton type="primary" @click="handleSubmit">{{ $t('common.save') }}</NButton>
         </NSpace>
       </template>
     </NDrawerContent>

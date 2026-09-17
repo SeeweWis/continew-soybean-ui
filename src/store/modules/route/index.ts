@@ -5,9 +5,8 @@ import { useBoolean } from '@sa/hooks';
 import type { CustomRoute, ElegantConstRoute, LastLevelRouteKey, RouteKey, RouteMap } from '@elegant-router/types';
 import { router } from '@/router';
 import { fetchGetRoutes } from '@/service/api';
-import { isNotNull } from '@/utils/common';
 import { SetupStoreId } from '@/enum';
-import { createDynamicRoutes, createStaticRoutes, getAuthVueRoutes } from '@/router/routes';
+import { createDynamicRoutes, createServerDynamicRoutes, createStaticRoutes, getAuthVueRoutes } from '@/router/routes';
 import { ROOT_ROUTE } from '@/router/routes/builtin';
 import { getRouteName, getRoutePath } from '@/router/elegant/transform';
 import { useAuthStore } from '../auth';
@@ -23,8 +22,6 @@ import {
   transformMenuToSearchMenus,
   updateLocaleOfGlobalMenus
 } from './shared';
-
-const defaultIcon = import.meta.env.VITE_MENU_ICON;
 
 export const useRouteStore = defineStore(SetupStoreId.Route, () => {
   const authStore = useAuthStore();
@@ -64,20 +61,6 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
     const authRoutesMap = new Map<string, ElegantConstRoute>([]);
 
     routes.forEach(route => {
-      if (authRouteMode.value === 'dynamic') {
-        if (route.path === '/' && route.children?.length) {
-          const child = route.children[0];
-          // @ts-expect-error no hidden field
-          child.hidden = route.hidden;
-          parseRouter(child);
-          child.name = Math.random().toString(36).slice(2, 12);
-          Object.assign(route, child);
-          delete route.children;
-          authRoutesMap.set(route.name, route);
-          return;
-        }
-        parseRouter(route);
-      }
       authRoutesMap.set(route.name, route);
     });
 
@@ -93,80 +76,6 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
     });
 
     authRoutes.value = Array.from(authRoutesMap.values());
-  }
-
-  // eslint-disable-next-line complexity
-  function parseRouter(route: ElegantConstRoute, parent?: ElegantConstRoute) {
-    route.meta = route.meta ? route.meta : { title: route.name };
-    if (route.meta.title.startsWith('route.') || route.meta.title.startsWith('menu.')) {
-      route.meta.i18nKey = route.meta.title as App.I18n.I18nKey;
-    }
-    const isLayout = route.component === 'Layout';
-    const isFramePage = route.component === 'FrameView';
-    const isParentLayout = route.component === 'ParentView';
-    const isBlankLayout = route.component?.startsWith('layout.blank$view.');
-    const isExternalLink = isNotNull(route.meta.link);
-
-    route.path = route.path.startsWith('/') ? route.path : `/${route.path}`;
-    route.path = parent ? parent.path + route.path : route.path;
-
-    route.name = route
-      .component!.replace(/\/index$/, '')
-      .replace(/\//g, '_')
-      .replace(/([A-Z])/g, '-$1')
-      .toLowerCase();
-    if (isLayout || isFramePage || isParentLayout) {
-      const name = route.path.substring(1).replaceAll('/', '_');
-      route.name = parent ? `${parent.name}_${name}` : name;
-    }
-
-    if (route.meta.icon?.startsWith('local-icon-')) {
-      route.meta.localIcon = route.meta.icon.replace('local-icon-', 'menu-');
-      delete route.meta.icon;
-    } else if (!isNotNull(route.meta.icon)) {
-      route.meta.icon = defaultIcon;
-    }
-    // @ts-expect-error no hidden field
-    route.meta.hideInMenu = route.hidden;
-    // @ts-expect-error route.meta.activeMenu is activeMenu type
-    route.meta.activeMenu = route.meta?.activeMenu?.substring(1);
-    if (route.meta.hideInMenu && parent && !route.meta.activeMenu) {
-      // @ts-expect-error parent.name is activeMenu type
-      route.meta.activeMenu = parent.name;
-    }
-    // 是否需要keepAlive
-    route.meta.keepAlive = !route.meta.noCache;
-
-    if (isFramePage) {
-      if (isExternalLink) {
-        route.meta.href = String(route.meta.link);
-        const random = Math.random().toString(36).slice(2, 12);
-        route.name = random;
-        route.path = `/${random}`;
-        route.component = 'layout.base$view.iframe-page';
-      } else {
-        try {
-          route.props = {
-            // @ts-expect-error no query field
-            url: JSON.parse(route.query)?.url
-          };
-        } catch {}
-      }
-      route.component = parent && !isExternalLink ? 'view.iframe-page' : 'layout.base$view.iframe-page';
-    } else if (!isLayout && !isParentLayout && !isBlankLayout) {
-      route.component = parent ? `view.${route.name}` : `layout.base$view.${route.name}`;
-    } else if (!isBlankLayout) {
-      route.component = isParentLayout ? undefined : 'layout.base';
-    }
-
-    delete route.meta.link;
-    delete route.meta.noCache;
-    // @ts-expect-error no query field
-    delete route.query;
-    // @ts-expect-error no hidden field
-    delete route.hidden;
-
-    route.children?.forEach(child => parseRouter(child, route));
   }
 
   const removeRouteFns: (() => void)[] = [];
@@ -263,7 +172,7 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
   /** Init auth route */
   async function initAuthRoute() {
     // check if user info is initialized
-    if (!authStore.userInfo.user?.userId) {
+    if (!authStore.userInfo.id) {
       await authStore.initUserInfo();
     }
 
@@ -298,7 +207,7 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
     const { data, error } = await fetchGetRoutes();
 
     if (!error) {
-      addAuthRoutes(data);
+      addAuthRoutes(createServerDynamicRoutes(data));
 
       handleConstantAndAuthRoutes();
 

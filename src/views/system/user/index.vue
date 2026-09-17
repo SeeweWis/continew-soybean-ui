@@ -3,15 +3,13 @@ import { computed, ref } from 'vue';
 import { NAvatar, NButton, NDivider, NEllipsis } from 'naive-ui';
 import { useBoolean, useLoading } from '@sa/hooks';
 import { jsonClone } from '@sa/utils';
-import { fetchBatchDeleteUser, fetchGetDeptTree, fetchGetUserList, fetchUpdateUserStatus } from '@/service/api/system';
+import { fetchBatchDeleteUser, fetchGetContinewUserList, fetchGetDeptTree } from '@/service/api/system';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
-import { useDict } from '@/hooks/business/dict';
 import { useAuth } from '@/hooks/business/auth';
 import { useDownload } from '@/hooks/business/download';
 import ButtonIcon from '@/components/custom/button-icon.vue';
 import { $t } from '@/locales';
-import StatusSwitch from '@/components/custom/status-switch.vue';
 import DictTag from '@/components/custom/dict-tag.vue';
 import UserOperateDrawer from './modules/user-operate-drawer.vue';
 import UserImportModal from './modules/user-import-modal.vue';
@@ -22,9 +20,6 @@ defineOptions({
   name: 'UserList'
 });
 
-useDict('sys_user_sex');
-useDict('sys_normal_disable');
-
 const { hasAuth } = useAuth();
 const appStore = useAppStore();
 const { download } = useDownload();
@@ -32,24 +27,22 @@ const { download } = useDownload();
 const { bool: importVisible, setTrue: openImportModal } = useBoolean();
 const { bool: passwordVisible, setTrue: openPasswordDrawer } = useBoolean();
 
-const searchParams = ref<Api.System.UserSearchParams>({
-  pageNum: 1,
-  pageSize: 10,
+const searchParams = ref<Api.System.ContinewUserQuery>({
+  page: 1,
+  size: 10,
   deptId: null,
-  userName: null,
-  nickName: null,
-  phonenumber: null,
+  description: null,
   status: null,
-  params: {}
+  createTime: null
 });
 
 const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination, scrollX } =
   useNaivePaginatedTable({
-    api: () => fetchGetUserList(searchParams.value),
+    api: () => fetchGetContinewUserList(searchParams.value),
     transform: response => defaultTransform(response),
     onPaginationParamsChange: params => {
-      searchParams.value.pageNum = params.page;
-      searchParams.value.pageSize = params.pageSize;
+      searchParams.value.page = params.page ?? 1;
+      searchParams.value.size = params.pageSize ?? 10;
     },
     columns: () => [
       {
@@ -58,7 +51,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         width: 48
       },
       {
-        key: 'userName',
+        key: 'username',
         title: $t('page.system.user.userName'),
         align: 'left',
         width: 220,
@@ -67,24 +60,24 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
           return (
             <div class="flex items-center justify-center gap-2">
               <NAvatar src={row.avatar} class="bg-primary">
-                {row.avatar ? undefined : row.nickName.charAt(0)}
+                {row.avatar ? undefined : row.nickname.charAt(0)}
               </NAvatar>
               <div class="max-w-160px flex flex-col">
-                <NEllipsis>{row.userName}</NEllipsis>
-                <NEllipsis>{row.nickName}</NEllipsis>
+                <NEllipsis>{row.username}</NEllipsis>
+                <NEllipsis>{row.nickname}</NEllipsis>
               </div>
             </div>
           );
         }
       },
       {
-        key: 'sex',
+        key: 'gender',
         title: $t('page.system.user.sex'),
         align: 'center',
         width: 80,
         ellipsis: true,
         render(row) {
-          return <DictTag value={row.sex} dictCode="sys_user_sex" />;
+          return <DictTag value={row.gender} dictCode="gender" />;
         }
       },
       {
@@ -102,7 +95,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         ellipsis: true
       },
       {
-        key: 'phonenumber',
+        key: 'phone',
         title: $t('page.system.user.phonenumber'),
         align: 'center',
         width: 120,
@@ -114,14 +107,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         align: 'center',
         width: 80,
         render(row) {
-          return (
-            <StatusSwitch
-              v-model:value={row.status}
-              disabled={row.userId === 1}
-              info={row.userName}
-              onSubmitted={(value, callback) => handleStatusChange(row, value, callback)}
-            />
-          );
+          return <DictTag value={row.status} dictCode="dis_enable_status" />;
         }
       },
       {
@@ -136,7 +122,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         align: 'center',
         width: 150,
         render: row => {
-          if (row.userId === 1) return null;
+          if (row.isSystem) return null;
 
           const editBtn = () => {
             return (
@@ -145,7 +131,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
                 type="primary"
                 icon="material-symbols:drive-file-rename-outline-outline"
                 tooltipContent={$t('common.edit')}
-                onClick={() => edit(row.userId)}
+                onClick={() => edit(row.id)}
               />
             );
           };
@@ -157,7 +143,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
                 type="primary"
                 icon="material-symbols:key-vertical-outline"
                 tooltipContent="重置密码"
-                onClick={() => handleResetPwd(row.userId)}
+                onClick={() => handleResetPwd(row.id)}
               />
             );
           };
@@ -170,15 +156,15 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
                 icon="material-symbols:delete-outline"
                 tooltipContent={$t('common.delete')}
                 popconfirmContent={$t('common.confirmDelete')}
-                onPositiveClick={() => handleDelete(row.userId)}
+                onPositiveClick={() => handleDelete(row.id)}
               />
             );
           };
 
           const buttons = [];
-          if (hasAuth('system:user:edit')) buttons.push(editBtn());
+          if (hasAuth('system:user:update')) buttons.push(editBtn());
           if (hasAuth('system:user:resetPwd')) buttons.push(passwordBtn());
-          if (hasAuth('system:user:remove')) buttons.push(deleteBtn());
+          if (hasAuth('system:user:delete')) buttons.push(deleteBtn());
 
           return (
             <div class="flex-center gap-8px">
@@ -196,7 +182,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
   });
 
 const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onBatchDeleted, onDeleted } =
-  useTableOperate(data, 'userId', getData);
+  useTableOperate(data, 'id', getData);
 
 async function handleBatchDelete() {
   // request
@@ -217,7 +203,7 @@ async function edit(userId: CommonType.IdType) {
 }
 
 async function handleResetPwd(userId: CommonType.IdType) {
-  const findItem = data.value.find(item => item.userId === userId) || null;
+  const findItem = data.value.find(item => item.id === userId) || null;
   editingData.value = jsonClone(findItem);
   openPasswordDrawer();
 }
@@ -251,25 +237,6 @@ function handleResetTreeData() {
 
 function handleImport() {
   openImportModal();
-}
-
-/** 处理状态切换 */
-async function handleStatusChange(
-  row: Api.System.User,
-  value: Api.Common.EnableStatus,
-  callback: (flag: boolean) => void
-) {
-  const { error } = await fetchUpdateUserStatus({
-    userId: row.userId,
-    status: value
-  });
-
-  callback(!error);
-
-  if (!error) {
-    window.$message?.success($t('page.system.user.statusChangeSuccess'));
-    getData();
-  }
 }
 
 function handleExport() {
@@ -310,7 +277,7 @@ function handleResetSearch() {
           :pattern="deptPattern"
           class="infinite-scroll h-full min-h-200px py-3"
           key-field="id"
-          label-field="label"
+          label-field="name"
           virtual-scroll
           :selectable="selectable"
           @update:selected-keys="handleClickTree"
@@ -322,32 +289,31 @@ function handleResetSearch() {
       </NSpin>
     </template>
     <div class="h-full flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
-      <UserSearch v-model:model="searchParams" @reset="handleResetSearch" @search="getDataByPage" />
-      <TableRowCheckAlert v-model:checked-row-keys="checkedRowKeys" />
-      <NCard :title="$t('page.system.user.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
-        <template #header-extra>
+      <NCard :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
+        <UserSearch v-model:model="searchParams" class="mb-12px" @reset="handleResetSearch" @search="getDataByPage" />
+        <div class="mb-12px flex flex-wrap items-center justify-between gap-12px">
+          <NSpace>
+            <NButton v-if="hasAuth('system:user:import')" size="small" @click="handleImport">
+              <template #icon>
+                <icon-material-symbols-upload-rounded class="text-icon" />
+              </template>
+              {{ $t('common.import') }}
+            </NButton>
+          </NSpace>
           <TableHeaderOperation
             v-model:columns="columnChecks"
             :disabled-delete="checkedRowKeys.length === 0"
             :loading="loading"
-            :show-add="hasAuth('system:user:add')"
-            :show-delete="hasAuth('system:user:remove')"
+            :show-add="hasAuth('system:user:create')"
+            :show-delete="hasAuth('system:user:delete')"
             :show-export="hasAuth('system:user:export')"
             @add="handleAdd"
             @delete="handleBatchDelete"
             @export="handleExport"
             @refresh="getData"
-          >
-            <template #after>
-              <NButton v-if="hasAuth('system:user:import')" size="small" ghost @click="handleImport">
-                <template #icon>
-                  <icon-material-symbols-upload-rounded class="text-icon" />
-                </template>
-                {{ $t('common.import') }}
-              </NButton>
-            </template>
-          </TableHeaderOperation>
-        </template>
+          />
+        </div>
+        <TableRowCheckAlert v-model:checked-row-keys="checkedRowKeys" />
         <NDataTable
           v-model:checked-row-keys="checkedRowKeys"
           :columns="columns"
@@ -357,7 +323,7 @@ function handleResetSearch() {
           :scroll-x="scrollX"
           :loading="loading"
           remote
-          :row-key="row => row.userId"
+          :row-key="row => row.id"
           :pagination="mobilePagination"
           class="h-full"
         />

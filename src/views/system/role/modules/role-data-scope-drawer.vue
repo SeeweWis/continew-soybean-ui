@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import { useLoading } from '@sa/hooks';
-import { dataScopeOptions } from '@/constants/business';
-import { fetchGetRoleDeptTreeSelect, fetchUpdateRoleDataScope } from '@/service/api/system/role';
-import { useFormRules, useNaiveForm } from '@/hooks/common/form';
+import { fetchGetDeptTree, fetchGetRoleDetail, fetchUpdateRole } from '@/service/api/system';
+import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
-import DeptTree from '@/components/custom/dept-tree.vue';
 
 defineOptions({
   name: 'RoleDataScopeDrawer'
@@ -13,7 +11,7 @@ defineOptions({
 
 interface Props {
   /** the edit row data */
-  rowData?: Api.System.Role | null;
+  rowData?: Api.System.ContinewRole | null;
 }
 
 const props = defineProps<Props>();
@@ -24,57 +22,43 @@ interface Emits {
 
 const emit = defineEmits<Emits>();
 
-const deptTreeRef = ref<InstanceType<typeof DeptTree> | null>(null);
-
 const visible = defineModel<boolean>('visible', {
   default: false
 });
 
-const deptOptions = ref<Api.System.Dept[]>([]);
+const { formRef } = useNaiveForm();
+const { loading, startLoading, endLoading } = useLoading();
 
-const { loading: deptLoading, startLoading: startDeptLoading, endLoading: endDeptLoading } = useLoading();
+const deptTreeData = ref<Api.Common.CommonTreeRecord>([]);
 
-const { formRef, validate, restoreValidation } = useNaiveForm();
-const { createRequiredRule } = useFormRules();
+const model = reactive({
+  name: '',
+  code: '',
+  sort: undefined as number | undefined,
+  description: undefined as string | undefined,
+  dataScope: 1 as 1 | 2 | 3 | 4 | 5,
+  deptIds: [] as CommonType.IdType[],
+  deptCheckStrictly: true
+});
 
-const title = computed(() => '分配数据权限');
-
-type Model = Api.System.RoleOperateParams;
-
-const model: Model = reactive(createDefaultModel());
-
-function createDefaultModel(): Model {
-  return {
-    roleId: props.rowData?.roleId,
-    roleName: props.rowData?.roleName,
-    roleKey: props.rowData?.roleKey,
-    roleSort: props.rowData?.roleSort,
-    deptIds: [],
-    menuIds: [],
-    deptCheckStrictly: true,
-    dataScope: '1'
-  };
-}
-
-type RuleKey = Extract<keyof Model, 'dataScope'>;
-
-const rules: Record<RuleKey, App.Global.FormRule> = {
-  dataScope: createRequiredRule('数据权限范围不能为空')
-};
-
-async function handleUpdateModelWhenEdit() {
-  startDeptLoading();
-  deptOptions.value = [];
-  model.deptIds = [];
-
-  if (props.rowData) {
-    Object.assign(model, props.rowData);
-    const { error, data } = await fetchGetRoleDeptTreeSelect(props.rowData.roleId!);
-    if (error) return;
-    deptOptions.value = data.depts;
-    model.deptIds = data.checkedKeys;
+async function getDetail() {
+  if (!props.rowData) return;
+  startLoading();
+  const { data, error } = await fetchGetRoleDetail(props.rowData.id);
+  if (!error) {
+    model.name = data.name;
+    model.code = data.code;
+    model.sort = data.sort;
+    model.description = data.description;
+    model.dataScope = data.dataScope ?? 1;
+    model.deptIds = data.deptIds ?? [];
+    model.deptCheckStrictly = data.deptCheckStrictly ?? true;
   }
-  endDeptLoading();
+  const { data: deptTree, error: deptError } = await fetchGetDeptTree();
+  if (!deptError) {
+    deptTreeData.value = deptTree;
+  }
+  endLoading();
 }
 
 function closeDrawer() {
@@ -82,18 +66,14 @@ function closeDrawer() {
 }
 
 async function handleSubmit() {
-  await validate();
-
-  const { roleId, roleName, roleKey, roleSort, dataScope, deptIds, menuIds } = model;
-
-  const { error } = await fetchUpdateRoleDataScope({
-    roleId,
-    roleName,
-    roleKey,
-    roleSort,
-    dataScope,
-    deptIds: dataScope === '2' ? deptIds : [],
-    menuIds
+  const { error } = await fetchUpdateRole(props.rowData!.id, {
+    name: model.name,
+    code: model.code,
+    sort: model.sort,
+    description: model.description,
+    dataScope: model.dataScope,
+    deptIds: model.dataScope === 5 ? model.deptIds : undefined,
+    deptCheckStrictly: model.deptCheckStrictly
   });
   if (error) return;
 
@@ -102,49 +82,45 @@ async function handleSubmit() {
   emit('submitted');
 }
 
-watch(visible, () => {
-  if (visible.value) {
-    handleUpdateModelWhenEdit();
-    restoreValidation();
+watch(visible, val => {
+  if (val) {
+    getDetail();
   }
 });
 </script>
 
 <template>
-  <NDrawer v-model:show="visible" :title="title" display-directive="show" :width="800" class="max-w-90%">
-    <NDrawerContent :title="title" :native-scrollbar="false" closable>
-      <NForm ref="formRef" :model="model" :rules="rules">
-        <NFormItem label="角色名称" path="roleName">
-          <NInput v-model:value="model.roleName" disabled placeholder="请输入角色名称" />
-        </NFormItem>
-        <NFormItem path="roleKey">
-          <template #label>
-            <div class="flex-center">
-              <FormTip content="控制器中定义的权限字符，如：@SaCheckRole('admin')" />
-              <span class="pl-3px">权限字符</span>
-            </div>
-          </template>
-          <NInput v-model:value="model.roleKey" disabled placeholder="请输入权限字符" />
-        </NFormItem>
-        <NFormItem label="权限范围" path="dataScope">
-          <NSelect v-model:value="model.dataScope" :options="dataScopeOptions" />
-        </NFormItem>
-        <NFormItem v-if="model.dataScope === '2'" label="数据权限" path="deptIds" class="pr-24px">
-          <DeptTree
-            v-if="visible"
-            ref="deptTreeRef"
-            v-model:value="model.deptIds"
-            v-model:options="deptOptions"
-            v-model:loading="deptLoading"
-            v-model:cascade="model.deptCheckStrictly"
-            :immediate="false"
-          />
-        </NFormItem>
-      </NForm>
+  <NDrawer v-model:show="visible" display-directive="show" :width="480" class="max-w-90%">
+    <NDrawerContent title="数据范围权限" :native-scrollbar="false" closable>
+      <NSpin :show="loading">
+        <NForm ref="formRef" :model="model">
+          <NFormItem label="角色名称">
+            <NInput :value="model.name" disabled />
+          </NFormItem>
+          <NFormItem label="数据范围" path="dataScope">
+            <DictSelect v-model:value="model.dataScope" dict-code="data_scope" />
+          </NFormItem>
+          <NFormItem v-if="model.dataScope === 5" label="部门范围" path="deptIds">
+            <NTreeSelect
+              v-model:value="model.deptIds"
+              multiple
+              checkable
+              cascade
+              clearable
+              :options="deptTreeData as []"
+              key-field="id"
+              label-field="name"
+              children-field="children"
+              placeholder="请选择部门范围"
+              :max-tag-count="3"
+            />
+          </NFormItem>
+        </NForm>
+      </NSpin>
       <template #footer>
         <NSpace :size="16">
           <NButton @click="closeDrawer">{{ $t('common.cancel') }}</NButton>
-          <NButton type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</NButton>
+          <NButton type="primary" :loading="loading" @click="handleSubmit">{{ $t('common.save') }}</NButton>
         </NSpace>
       </template>
     </NDrawerContent>

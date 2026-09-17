@@ -1,17 +1,16 @@
 import { request } from '@/service/request';
 
-/** 获取菜单列表 */
-export function fetchGetMenuList(params?: Api.System.MenuSearchParams, signal?: AbortSignal) {
-  return request<Api.System.MenuList>({
-    url: '/system/menu/list',
+/** 获取菜单树 */
+export function fetchGetMenuTree(params?: Api.System.ContinewMenuQuery) {
+  return request<Api.System.ContinewMenu[]>({
+    url: '/system/menu/tree',
     method: 'get',
-    params,
-    signal
+    params
   });
 }
 
 /** 新增菜单 */
-export function fetchCreateMenu(data: Api.System.MenuOperateParams) {
+export function fetchCreateMenu(data: Api.System.ContinewMenuReq) {
   return request<boolean>({
     url: '/system/menu',
     method: 'post',
@@ -20,50 +19,27 @@ export function fetchCreateMenu(data: Api.System.MenuOperateParams) {
 }
 
 /** 修改菜单 */
-export function fetchUpdateMenu(data: Api.System.MenuOperateParams) {
+export function fetchUpdateMenu(id: CommonType.IdType, data: Api.System.ContinewMenuReq) {
   return request<boolean>({
-    url: '/system/menu',
+    url: `/system/menu/${id}`,
     method: 'put',
     data
   });
 }
 
-/** 删除菜单 */
-export function fetchDeleteMenu(menuId: CommonType.IdType) {
+/** 批量删除菜单 */
+export function fetchBatchDeleteMenu(ids: CommonType.IdType[]) {
   return request<boolean>({
-    url: `/system/menu/${menuId}`,
-    method: 'delete'
+    url: '/system/menu',
+    method: 'delete',
+    data: { ids }
   });
 }
 
-/** 获取菜单树 */
-export function fetchGetMenuTreeSelect() {
-  return request<Api.System.MenuList>({
-    url: 'system/menu/treeselect',
-    method: 'get'
-  });
-}
-
-/** 获取角色菜单权限 */
-export function fetchGetRoleMenuTreeSelect(roleId: CommonType.IdType) {
-  return request<Api.System.RoleMenuTreeSelect>({
-    url: `/system/menu/roleMenuTreeselect/${roleId}`,
-    method: 'get'
-  });
-}
-
-/** 获取租户套餐关联菜单 */
-export function fetchGetTenantPackageMenuTreeSelect(packageId: CommonType.IdType) {
-  return request<Api.System.TenantPackageMenuTreeSelect>({
-    url: `/system/menu/tenantPackageMenuTreeselect/${packageId}`,
-    method: 'get'
-  });
-}
-
-/** 级联删除菜单 */
-export function fetchCascadeDeleteMenu(menuIds: CommonType.IdType[]) {
+/** 清除菜单缓存 */
+export function fetchClearMenuCache() {
   return request<boolean>({
-    url: `/system/menu/cascade/${menuIds.join(',')}`,
+    url: '/system/menu/cache',
     method: 'delete'
   });
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useLoading } from '@sa/hooks';
-import { fetchGetRoleSelect } from '@/service/api/system';
+import { fetchGetRoleDict } from '@/service/api/system';
 
 defineOptions({
   name: 'RoleSelect',
@@ -14,21 +14,21 @@ interface Props {
 
 defineProps<Props>();
 
-const value = defineModel<CommonType.IdType[] | null>('value', { required: false });
+const value = defineModel<CommonType.IdType | CommonType.IdType[] | null>('value', { required: false });
 
 const { loading: roleLoading, startLoading: startRoleLoading, endLoading: endRoleLoading } = useLoading();
 
-/** the enabled role options */
-const roleOptions = ref<CommonType.Option<CommonType.IdType>[]>([]);
+/** the role options */
+const roleOptions = ref<{ label: string; value: CommonType.IdType }[]>([]);
 
 async function getRoleOptions() {
   startRoleLoading();
-  const { error, data } = await fetchGetRoleSelect();
+  const { error, data } = await fetchGetRoleDict();
 
   if (!error) {
     roleOptions.value = data.map(item => ({
-      label: item.roleName,
-      value: item.roleId
+      label: item.label,
+      value: item.value as CommonType.IdType
     }));
   }
   endRoleLoading();

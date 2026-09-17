@@ -1,16 +1,32 @@
 import { request } from '@/service/request';
 
-/** 获取角色信息列表 */
-export function fetchGetRoleList(params?: Api.System.RoleSearchParams) {
-  return request<Api.System.RoleList>({
+/** 获取角色列表 */
+export function fetchGetRoleList(params?: Api.System.ContinewRoleQuery) {
+  return request<Api.System.ContinewRole[]>({
     url: '/system/role/list',
     method: 'get',
     params
   });
 }
 
-/** 新增角色信息 */
-export function fetchCreateRole(data: Api.System.RoleOperateParams) {
+/** 获取角色字典 */
+export function fetchGetRoleDict() {
+  return request<Api.System.LabelValue[]>({
+    url: '/system/role/dict',
+    method: 'get'
+  });
+}
+
+/** 获取角色详情 */
+export function fetchGetRoleDetail(id: CommonType.IdType) {
+  return request<Api.System.ContinewRole>({
+    url: `/system/role/${id}`,
+    method: 'get'
+  });
+}
+
+/** 新增角色 */
+export function fetchCreateRole(data: Api.System.ContinewRoleReq) {
   return request<boolean>({
     url: '/system/role',
     method: 'post',
@@ -18,81 +34,64 @@ export function fetchCreateRole(data: Api.System.RoleOperateParams) {
   });
 }
 
-/** 修改角色信息 */
-export function fetchUpdateRole(data: Api.System.RoleOperateParams) {
+/** 修改角色 */
+export function fetchUpdateRole(id: CommonType.IdType, data: Api.System.ContinewRoleReq) {
+  return request<boolean>({
+    url: `/system/role/${id}`,
+    method: 'put',
+    data
+  });
+}
+
+/** 批量删除角色 */
+export function fetchBatchDeleteRole(ids: CommonType.IdType[]) {
   return request<boolean>({
     url: '/system/role',
-    method: 'put',
-    data
+    method: 'delete',
+    data: { ids }
   });
 }
 
-/** 修改角色状态 */
-export function fetchUpdateRoleStatus(data: Api.System.RoleOperateParams) {
-  return request<boolean>({
-    url: '/system/role/changeStatus',
-    method: 'put',
-    data
-  });
-}
-
-/** 修改角色数据权限 */
-export function fetchUpdateRoleDataScope(data: Api.System.RoleOperateParams) {
-  return request<boolean>({
-    url: '/system/role/dataScope',
-    method: 'put',
-    data
-  });
-}
-
-/** 批量删除角色信息 */
-export function fetchBatchDeleteRole(roleIds: CommonType.IdType[]) {
-  return request<boolean>({
-    url: `/system/role/${roleIds.join(',')}`,
-    method: 'delete'
-  });
-}
-
-/** 获取角色选择框列表 */
-export function fetchGetRoleSelect(roleIds?: CommonType.IdType[]) {
-  return request<Api.System.Role[]>({
-    url: '/system/role/optionselect',
-    method: 'get',
-    params: { roleIds }
-  });
-}
-
-/** 获取对应角色部门树列表 */
-export function fetchGetRoleDeptTreeSelect(roleId: CommonType.IdType) {
-  return request<Api.System.RoleDeptTreeSelect>({
-    url: `/system/role/deptTree/${roleId}`,
+/** 获取角色功能权限树 */
+export function fetchGetRolePermissionTree() {
+  return request<Api.System.ContinewRolePermission[]>({
+    url: '/system/role/permission/tree',
     method: 'get'
   });
 }
 
-/** 获取对应角色用户列表 */
-export function fetchGetRoleUserList(params: Api.System.UserSearchParams) {
-  return request<Api.System.UserList>({
-    url: `/system/role/authUser/allocatedList`,
+/** 修改角色功能权限 */
+export function fetchUpdateRolePermission(id: CommonType.IdType, data: Api.System.ContinewRolePermissionReq) {
+  return request<boolean>({
+    url: `/system/role/${id}/permission`,
+    method: 'put',
+    data
+  });
+}
+
+/** 获取角色下用户分页列表 */
+export function fetchGetRoleUserPage(id: CommonType.IdType, params: Api.System.ContinewRoleUserQuery) {
+  return request<Api.System.ContinewRoleUserPage>({
+    url: `/system/role/${id}/user`,
     method: 'get',
     params
   });
 }
 
-/** 批量选择用户授权 */
-export function fetchUpdateRoleAuthUser(roleId: CommonType.IdType, userIds: CommonType.IdType[]) {
+/** 角色分配用户 */
+export function fetchAssignRoleUser(id: CommonType.IdType, userIds: CommonType.IdType[]) {
   return request<boolean>({
-    url: '/system/role/authUser/selectAll',
-    method: 'put',
-    params: { roleId, userIds: userIds.join(',') }
+    url: `/system/role/${id}/user`,
+    method: 'post',
+    data: userIds
   });
 }
 
-/** 批量取消用户授权 */
-export function fetchUpdateRoleAuthUserCancel(roleId: CommonType.IdType, userIds: CommonType.IdType[]) {
+/** 角色取消分配用户 */
+export function fetchUnassignRoleUser(userIds: CommonType.IdType[]) {
   return request<boolean>({
-    url: '/system/role/authUser/cancelAll',
-    method: 'put',
-    params: { roleId, userIds: userIds.join(',') }
+    url: '/system/role/user',
+    method: 'delete',
+    data: userIds
   });
 }

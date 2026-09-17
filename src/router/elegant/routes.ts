@@ -51,30 +51,21 @@ export const generatedRoutes: GeneratedRoute[] = [
     }
   },
   {
-    name: 'demo',
-    path: '/demo',
+    name: 'code',
+    path: '/code',
     component: 'layout.base',
     meta: {
-      title: 'demo',
-      i18nKey: 'route.demo'
+      title: 'code',
+      i18nKey: 'route.code'
     },
     children: [
       {
-        name: 'demo_demo',
-        path: '/demo/demo',
-        component: 'view.demo_demo',
+        name: 'code_generator',
+        path: '/code/generator',
+        component: 'view.code_generator',
         meta: {
-          title: 'demo_demo',
-          i18nKey: 'route.demo_demo'
-        }
-      },
-      {
-        name: 'demo_tree',
-        path: '/demo/tree',
-        component: 'view.demo_tree',
-        meta: {
-          title: 'demo_tree',
-          i18nKey: 'route.demo_tree'
+          title: 'code_generator',
+          i18nKey: 'route.code_generator'
         }
       }
     ]
@@ -125,21 +116,12 @@ export const generatedRoutes: GeneratedRoute[] = [
     },
     children: [
       {
-        name: 'monitor_cache',
-        path: '/monitor/cache',
-        component: 'view.monitor_cache',
+        name: 'monitor_log',
+        path: '/monitor/log',
+        component: 'view.monitor_log',
         meta: {
-          title: 'monitor_cache',
-          i18nKey: 'route.monitor_cache'
-        }
-      },
-      {
-        name: 'monitor_logininfor',
-        path: '/monitor/logininfor',
-        component: 'view.monitor_logininfor',
-        meta: {
-          title: 'monitor_logininfor',
-          i18nKey: 'route.monitor_logininfor'
+          title: 'monitor_log',
+          i18nKey: 'route.monitor_log'
         }
       },
       {
@@ -152,12 +134,71 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       },
       {
-        name: 'monitor_operlog',
-        path: '/monitor/operlog',
-        component: 'view.monitor_operlog',
+        name: 'monitor_sms',
+        path: '/monitor/sms',
         meta: {
-          title: 'monitor_operlog',
-          i18nKey: 'route.monitor_operlog'
+          title: 'monitor_sms',
+          i18nKey: 'route.monitor_sms'
+        },
+        children: [
+          {
+            name: 'monitor_sms_log',
+            path: '/monitor/sms/log',
+            component: 'view.monitor_sms_log',
+            meta: {
+              title: 'monitor_sms_log',
+              i18nKey: 'route.monitor_sms_log'
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'open',
+    path: '/open',
+    component: 'layout.base',
+    meta: {
+      title: 'open',
+      i18nKey: 'route.open'
+    },
+    children: [
+      {
+        name: 'open_app',
+        path: '/open/app',
+        component: 'view.open_app',
+        meta: {
+          title: 'open_app',
+          i18nKey: 'route.open_app'
+        }
+      }
+    ]
+  },
+  {
+    name: 'schedule',
+    path: '/schedule',
+    component: 'layout.base',
+    meta: {
+      title: 'schedule',
+      i18nKey: 'route.schedule'
+    },
+    children: [
+      {
+        name: 'schedule_job',
+        path: '/schedule/job',
+        component: 'view.schedule_job',
+        meta: {
+          title: 'schedule_job',
+          i18nKey: 'route.schedule_job'
+        }
+      },
+      {
+        name: 'schedule_log',
+        path: '/schedule/log',
+        component: 'view.schedule_log',
+        meta: {
+          title: 'schedule_log',
+          i18nKey: 'route.schedule_log'
         }
       }
     ]
@@ -185,22 +226,78 @@ export const generatedRoutes: GeneratedRoute[] = [
     },
     children: [
       {
-        name: 'system_client',
-        path: '/system/client',
-        component: 'view.system_client',
-        meta: {
-          title: 'system_client',
-          i18nKey: 'route.system_client'
-        }
-      },
-      {
         name: 'system_config',
         path: '/system/config',
         component: 'view.system_config',
         meta: {
           title: 'system_config',
           i18nKey: 'route.system_config'
-        }
+        },
+        children: [
+          {
+            name: 'system_config_client',
+            path: '/system/config/client',
+            component: 'view.system_config_client',
+            meta: {
+              title: 'system_config_client',
+              i18nKey: 'route.system_config_client'
+            }
+          },
+          {
+            name: 'system_config_login',
+            path: '/system/config/login',
+            component: 'view.system_config_login',
+            meta: {
+              title: 'system_config_login',
+              i18nKey: 'route.system_config_login'
+            }
+          },
+          {
+            name: 'system_config_mail',
+            path: '/system/config/mail',
+            component: 'view.system_config_mail',
+            meta: {
+              title: 'system_config_mail',
+              i18nKey: 'route.system_config_mail'
+            }
+          },
+          {
+            name: 'system_config_security',
+            path: '/system/config/security',
+            component: 'view.system_config_security',
+            meta: {
+              title: 'system_config_security',
+              i18nKey: 'route.system_config_security'
+            }
+          },
+          {
+            name: 'system_config_site',
+            path: '/system/config/site',
+            component: 'view.system_config_site',
+            meta: {
+              title: 'system_config_site',
+              i18nKey: 'route.system_config_site'
+            }
+          },
+          {
+            name: 'system_config_sms',
+            path: '/system/config/sms',
+            component: 'view.system_config_sms',
+            meta: {
+              title: 'system_config_sms',
+              i18nKey: 'route.system_config_sms'
+            }
+          },
+          {
+            name: 'system_config_storage',
+            path: '/system/config/storage',
+            component: 'view.system_config_storage',
+            meta: {
+              title: 'system_config_storage',
+              i18nKey: 'route.system_config_storage'
+            }
+          }
+        ]
       },
       {
         name: 'system_dept',
@@ -218,6 +315,26 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'system_dict',
           i18nKey: 'route.system_dict'
+        },
+        children: [
+          {
+            name: 'system_dict_item',
+            path: '/system/dict/item',
+            component: 'view.system_dict_item',
+            meta: {
+              title: 'system_dict_item',
+              i18nKey: 'route.system_dict_item'
+            }
+          }
+        ]
+      },
+      {
+        name: 'system_file',
+        path: '/system/file',
+        component: 'view.system_file',
+        meta: {
+          title: 'system_file',
+          i18nKey: 'route.system_file'
         }
       },
       {
@@ -238,37 +355,27 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'system_notice',
           i18nKey: 'route.system_notice'
-        }
-      },
-      {
-        name: 'system_oss',
-        path: '/system/oss',
-        component: 'view.system_oss',
-        meta: {
-          title: 'system_oss',
-          i18nKey: 'route.system_oss'
-        }
-      },
-      {
-        name: 'system_oss-config',
-        path: '/system/oss-config',
-        component: 'view.system_oss-config',
-        meta: {
-          title: 'system_oss-config',
-          i18nKey: 'route.system_oss-config',
-          constant: true,
-          hideInMenu: true,
-          icon: 'hugeicons:configuration-01'
-        }
-      },
-      {
-        name: 'system_post',
-        path: '/system/post',
-        component: 'view.system_post',
-        meta: {
-          title: 'system_post',
-          i18nKey: 'route.system_post'
-        }
+        },
+        children: [
+          {
+            name: 'system_notice_add',
+            path: '/system/notice/add',
+            component: 'view.system_notice_add',
+            meta: {
+              title: 'system_notice_add',
+              i18nKey: 'route.system_notice_add'
+            }
+          },
+          {
+            name: 'system_notice_view',
+            path: '/system/notice/view',
+            component: 'view.system_notice_view',
+            meta: {
+              title: 'system_notice_view',
+              i18nKey: 'route.system_notice_view'
+            }
+          }
+        ]
       },
       {
         name: 'system_role',
@@ -277,24 +384,6 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'system_role',
           i18nKey: 'route.system_role'
-        }
-      },
-      {
-        name: 'system_tenant',
-        path: '/system/tenant',
-        component: 'view.system_tenant',
-        meta: {
-          title: 'system_tenant',
-          i18nKey: 'route.system_tenant'
-        }
-      },
-      {
-        name: 'system_tenant-package',
-        path: '/system/tenant-package',
-        component: 'view.system_tenant-package',
-        meta: {
-          title: 'system_tenant-package',
-          i18nKey: 'route.system_tenant-package'
         }
       },
       {
@@ -309,25 +398,30 @@ export const generatedRoutes: GeneratedRoute[] = [
     ]
   },
   {
-    name: 'tool',
-    path: '/tool',
+    name: 'tenant',
+    path: '/tenant',
     component: 'layout.base',
     meta: {
-      title: 'tool',
-      i18nKey: 'route.tool',
-      localIcon: 'menu-tool',
-      order: 4
+      title: 'tenant',
+      i18nKey: 'route.tenant'
     },
     children: [
       {
-        name: 'tool_gen',
-        path: '/tool/gen',
-        component: 'view.tool_gen',
+        name: 'tenant_management',
+        path: '/tenant/management',
+        component: 'view.tenant_management',
         meta: {
-          title: 'tool_gen',
-          i18nKey: 'route.tool_gen',
-          localIcon: 'menu-code',
-          order: 2
+          title: 'tenant_management',
+          i18nKey: 'route.tenant_management'
+        }
+      },
+      {
+        name: 'tenant_package',
+        path: '/tenant/package',
+        component: 'view.tenant_package',
+        meta: {
+          title: 'tenant_package',
+          i18nKey: 'route.tenant_package'
         }
       }
     ]

@@ -1,59 +1,53 @@
 import { request } from '@/service/request';
 
-/** 根据字典类型查询字典数据信息 */
-export function fetchGetDictDataByType(dictType: string) {
-  return request<Api.System.DictData[]>({
-    url: `/system/dict/data/type/${dictType}`,
+/** 查询公共字典（标签-值集合） */
+export function fetchGetCommonDict(code: string) {
+  return request<Api.System.LabelValue[]>({
+    url: `/system/common/dict/${code}`,
     method: 'get'
   });
 }
 
-/** 获取字典选择框列表 */
-export function fetchGetDictTypeOption() {
-  return request<Api.System.DictType[]>({
-    url: '/system/dict/type/optionselect',
-    method: 'get'
-  });
-}
-
-/** 获取字典类型列表 */
-export function fetchGetDictTypeList(params?: Api.System.DictTypeSearchParams) {
-  return request<Api.System.DictTypeList>({
-    url: '/system/dict/type/list',
+/** 获取字典列表 */
+export function fetchGetDictList(params?: Api.System.ContinewDictQuery) {
+  return request<Api.System.ContinewDict[]>({
+    url: '/system/dict/list',
     method: 'get',
     params
   });
 }
 
-/** 新增字典类型 */
-export function fetchCreateDictType(data: Api.System.DictTypeOperateParams) {
+/** 新增字典 */
+export function fetchCreateDict(data: Api.System.ContinewDictReq) {
   return request<boolean>({
-    url: '/system/dict/type',
+    url: '/system/dict',
     method: 'post',
     data
   });
 }
 
-/** 修改字典类型 */
-export function fetchUpdateDictType(data: Api.System.DictTypeOperateParams) {
+/** 修改字典 */
+export function fetchUpdateDict(id: CommonType.IdType, data: Api.System.ContinewDictReq) {
   return request<boolean>({
-    url: '/system/dict/type',
+    url: `/system/dict/${id}`,
     method: 'put',
     data
   });
 }
 
-/** 批量删除字典类型 */
-export function fetchBatchDeleteDictType(dictIds: CommonType.IdType[]) {
+/** 批量删除字典 */
+export function fetchBatchDeleteDict(ids: CommonType.IdType[]) {
   return request<boolean>({
-    url: `/system/dict/type/${dictIds.join(',')}`,
-    method: 'delete'
+    url: '/system/dict',
+    method: 'delete',
+    data: { ids }
   });
 }
-/** 刷新缓存 */
-export function fetchRefreshCache() {
+
+/** 清除指定字典缓存 */
+export function fetchClearDictCache(code: string) {
   return request<boolean>({
-    url: `/system/dict/type/refreshCache`,
+    url: `/system/dict/cache/${code}`,
     method: 'delete'
   });
 }

@@ -1,16 +1,24 @@
 import { request } from '@/service/request';
 
-/** 获取通知公告列表 */
-export function fetchGetNoticeList(params?: Api.System.NoticeSearchParams) {
-  return request<Api.System.NoticeList>({
-    url: '/system/notice/list',
+/** 获取公告分页列表 */
+export function fetchGetNoticePage(params: Api.System.ContinewNoticeQuery) {
+  return request<Api.System.ContinewNoticePage>({
+    url: '/system/notice',
     method: 'get',
     params
   });
 }
 
-/** 新增通知公告 */
-export function fetchCreateNotice(data: Api.System.NoticeOperateParams) {
+/** 获取公告详情 */
+export function fetchGetNoticeDetail(id: CommonType.IdType) {
+  return request<Api.System.ContinewNotice>({
+    url: `/system/notice/${id}`,
+    method: 'get'
+  });
+}
+
+/** 新增公告 */
+export function fetchCreateNotice(data: Api.System.ContinewNoticeReq) {
   return request<boolean>({
     url: '/system/notice',
     method: 'post',
@@ -18,19 +26,20 @@ export function fetchCreateNotice(data: Api.System.NoticeOperateParams) {
   });
 }
 
-/** 修改通知公告 */
-export function fetchUpdateNotice(data: Api.System.NoticeOperateParams) {
+/** 修改公告 */
+export function fetchUpdateNotice(id: CommonType.IdType, data: Api.System.ContinewNoticeReq) {
   return request<boolean>({
-    url: '/system/notice',
+    url: `/system/notice/${id}`,
     method: 'put',
     data
   });
 }
 
-/** 批量删除通知公告 */
-export function fetchBatchDeleteNotice(noticeIds: CommonType.IdType[]) {
+/** 批量删除公告 */
+export function fetchBatchDeleteNotice(ids: CommonType.IdType[]) {
   return request<boolean>({
-    url: `/system/notice/${noticeIds.join(',')}`,
-    method: 'delete'
+    url: '/system/notice',
+    method: 'delete',
+    data: { ids }
   });
 }

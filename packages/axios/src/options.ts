@@ -41,10 +41,11 @@ export function createRetryOptions(config?: Partial<CreateAxiosDefaults>) {
 }
 
 export function createAxiosConfig(config?: Partial<CreateAxiosDefaults>) {
-  const TEN_SECONDS = 10 * 1000;
+  // 30s：后端偶发慢响应（远程 DB/Redis + 调试环境）时避免 10s 就中断请求
+  const DEFAULT_TIMEOUT = 30 * 1000;
 
   const axiosConfig: CreateAxiosDefaults = {
-    timeout: TEN_SECONDS,
+    timeout: DEFAULT_TIMEOUT,
     headers: {
       'Content-Type': 'application/json'
     },

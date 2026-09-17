@@ -1,5 +1,33 @@
 .table-search {
   .n-collapse {
-    --n-title-font-size: 15px !important;
+    --n-title-font-size: 14px !important;
+  }
+
+  .n-card__content {
+    padding: 8px 16px 12px;
+  }
+
+  .n-collapse-item__header {
+    min-height: 32px;
+  }
+
+  .n-collapse-item__content-inner {
+    padding-top: 12px;
+    padding-bottom: 0;
+  }
+
+  .n-form-item {
+    margin-bottom: 8px;
+  }
+
+  .n-form-item-label {
+    font-size: 13px;
+  }
+
+  .n-input,
+  .n-base-selection,
+  .n-button {
+    --n-height: 32px;
+    --n-font-size: 13px;
   }
 }

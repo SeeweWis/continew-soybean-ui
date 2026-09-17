@@ -5,6 +5,7 @@ import { useLoading } from '@sa/hooks';
 import { fetchGetUserInfo, fetchLogin, fetchLogout } from '@/service/api';
 import { useRouterPush } from '@/hooks/common/router';
 import { localStg } from '@/utils/storage';
+import { encrypt } from '@/utils/jsencrypt';
 import { SetupStoreId } from '@/enum';
 import { useRouteStore } from '../route';
 import { useTabStore } from '../tab';
@@ -23,9 +24,9 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
   const token = ref('');
 
   const userInfo: Api.Auth.UserInfo = reactive({
-    user: undefined,
     roles: [],
-    permissions: []
+    permissions: [],
+    roleNames: []
   });
 
   /** is super role in static route */
@@ -62,12 +63,12 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
 
   /** Record the user ID of the previous login session Used to compare with the current user ID on next login */
   function recordUserId() {
-    if (!userInfo.user?.userId) {
+    if (!userInfo.id) {
       return;
     }
 
     // Store current user ID locally for next login comparison
-    localStg.set('lastLoginUserId', userInfo.user?.userId);
+    localStg.set('lastLoginUserId', userInfo.id);
   }
 
   /**
@@ -76,14 +77,14 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
    * @returns {boolean} Whether to clear all tabs
    */
   function checkTabClear(): boolean {
-    if (!userInfo.user?.userId) {
+    if (!userInfo.id) {
       return false;
     }
 
     const lastLoginUserId = localStg.get('lastLoginUserId');
 
     // Clear all tabs if current user is different from previous user
-    if (!lastLoginUserId || lastLoginUserId !== userInfo.user?.userId) {
+    if (!lastLoginUserId || lastLoginUserId !== userInfo.id) {
       localStg.remove('globalTabs');
       tabStore.clearTabs();
 
@@ -100,17 +101,24 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
    *
    * @param [redirect=true] Whether to redirect after login. Default is `true`
    */
-  async function login(loginForm: Api.Auth.PwdLoginForm | Api.Auth.SocialLoginForm, redirect = true) {
+  async function login(loginForm: Api.Auth.LoginForm, redirect = true) {
     startLoading();
 
     const { VITE_APP_CLIENT_ID } = import.meta.env;
 
-    const loginData: Api.Auth.PwdLoginForm = {
+    const loginData: Api.Auth.LoginForm = {
       ...loginForm,
-      tenantId: loginForm.tenantId ?? '000000',
-      clientId: VITE_APP_CLIENT_ID!,
-      grantType: loginForm.grantType ?? 'password'
+      clientId: VITE_APP_CLIENT_ID!
     };
+
+    if (loginData.authType === 'ACCOUNT') {
+      const password = encrypt(loginData.password);
+      if (!password) {
+        endLoading();
+        return Promise.reject(new Error('密码加密失败'));
+      }
+      loginData.password = password;
+    }
 
     const { data: loginToken, error } = await fetchLogin(loginData);
 
@@ -145,14 +153,15 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
 
   async function loginByToken(loginToken: Api.Auth.LoginToken) {
     // 1. stored in the localStorage, the later requests need it in headers
-    localStg.set('token', loginToken.access_token!);
-    localStg.set('refreshToken', loginToken.refresh_token!);
+    localStg.set('token', loginToken.token);
+    // 租户 ID，用于请求头 X-Tenant-Id
+    localStg.set('tenantId', loginToken.tenantId);
 
     // 2. get user info
     const pass = await getUserInfo();
 
     if (pass) {
-      token.value = loginToken.access_token!;
+      token.value = loginToken.token;
 
       return true;
     }

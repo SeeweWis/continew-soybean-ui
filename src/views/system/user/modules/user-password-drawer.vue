@@ -10,7 +10,7 @@ defineOptions({
 
 interface Props {
   /** the edit row data */
-  rowData?: Api.System.User | null;
+  rowData?: Api.System.ContinewUser | null;
 }
 
 const props = defineProps<Props>();
@@ -28,15 +28,21 @@ const visible = defineModel<boolean>('visible', {
 const { formRef, validate, restoreValidation } = useNaiveForm();
 const { patternRules } = useFormRules();
 
-type Model = Api.System.UserOperateParams & { deptName: string };
+type Model = {
+  id?: CommonType.IdType;
+  username: string;
+  nickname: string;
+  deptName: string;
+  password: string;
+};
 
 const model: Model = reactive(createDefaultModel());
 
 function createDefaultModel(): Model {
   return {
-    deptId: null,
-    userName: '',
-    nickName: '',
+    id: undefined,
+    username: '',
+    nickname: '',
     deptName: '',
     password: ''
   };
@@ -60,10 +66,10 @@ function closeDrawer() {
 async function handleSubmit() {
   await validate();
 
-  const { userId, password } = model;
+  const { id, password } = model;
 
   // request
-  const { error } = await fetchResetUserPassword(userId!, password!);
+  const { error } = await fetchResetUserPassword(id!, password!);
   if (error) return;
 
   window.$message?.success($t('common.updateSuccess'));
@@ -83,14 +89,14 @@ watch(visible, () => {
   <NDrawer v-model:show="visible" display-directive="show" :width="800" class="max-w-90%">
     <NDrawerContent title="重置密码" :native-scrollbar="false" closable>
       <NForm ref="formRef" :model="model" :rules="rules">
-        <NFormItem :label="$t('page.system.user.nickName')" path="nickName">
-          <NInput v-model:value="model.nickName" disabled />
+        <NFormItem :label="$t('page.system.user.nickName')" path="nickname">
+          <NInput v-model:value="model.nickname" disabled />
         </NFormItem>
         <NFormItem :label="$t('page.system.user.deptName')" path="deptName">
           <NInput v-model:value="model.deptName" disabled />
         </NFormItem>
-        <NFormItem :label="$t('page.system.user.userName')" path="userName">
-          <NInput v-model:value="model.userName" disabled />
+        <NFormItem :label="$t('page.system.user.userName')" path="username">
+          <NInput v-model:value="model.username" disabled />
         </NFormItem>
         <NFormItem :label="$t('page.system.user.password')" path="password">
           <NInput

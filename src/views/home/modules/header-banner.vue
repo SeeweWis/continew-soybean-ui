@@ -45,13 +45,13 @@ const statisticData = computed<StatisticData[]>(() => [
       <NGi span="24 s:24 m:18">
         <div class="flex-y-center">
           <div class="size-72px shrink-0 overflow-hidden rd-1/2">
-            <img :src="authStore.userInfo.user?.avatar || defaultAvatar" class="size-full" />
+            <img :src="authStore.userInfo.avatar || defaultAvatar" class="size-full" />
           </div>
           <div class="pl-12px">
             <h3 class="text-18px font-semibold">
               {{
                 $t('page.home.greeting', {
-                  userName: authStore.userInfo.user?.nickName || authStore.userInfo.user?.userName
+                  userName: authStore.userInfo.nickname || authStore.userInfo.username
                 })
               }}
             </h3>

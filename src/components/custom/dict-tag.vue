@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { jsonClone } from '@sa/utils';
 import { useDict } from '@/hooks/business/dict';
 import { isNotNull } from '@/utils/common';
-import { $t } from '@/locales';
 
 defineOptions({
   name: 'DictTag',
@@ -14,7 +12,7 @@ interface Props {
   value?: string[] | number[] | string | number;
   dictCode?: string;
   immediate?: boolean;
-  dictData?: Api.System.DictData;
+  dictData?: Api.System.LabelValue;
   [key: string]: any;
 }
 
@@ -25,16 +23,13 @@ const props = withDefaults(defineProps<Props>(), {
   value: () => []
 });
 
+const TAG_TYPES = ['default', 'primary', 'info', 'success', 'warning', 'error'] as const;
+
 const { transformDictData } = useDict(props.dictCode, props.immediate);
 
-const dictTagData = computed<Api.System.DictData[]>(() => {
+const dictTagData = computed<Api.System.LabelValue[]>(() => {
   if (props.dictData) {
-    const dictData = jsonClone(props.dictData);
-    if (dictData.dictLabel?.startsWith(`dict.${dictData.dictType}.`)) {
-      dictData.isI18n = true;
-      dictData.i18nKey = dictData.dictLabel as App.I18n.I18nKey;
-    }
-    return [dictData];
+    return [props.dictData];
   }
   // 避免 props.value 为 0 时，无法触发
   if (props.dictCode && isNotNull(props.value)) {
@@ -43,19 +38,23 @@ const dictTagData = computed<Api.System.DictData[]>(() => {
 
   return [];
 });
+
+function getTagType(extra?: string | number) {
+  const type = String(extra);
+  return (TAG_TYPES as readonly string[]).includes(type) ? (type as (typeof TAG_TYPES)[number]) : 'default';
+}
 </script>
 
 <template>
   <div v-if="dictTagData.length">
     <NTag
       v-for="item in dictTagData"
-      :key="item.dictValue"
+      :key="String(item.value)"
       class="m-1"
-      :class="[item.cssClass]"
       v-bind="$attrs"
-      :type="item.listClass || 'default'"
+      :type="getTagType(item.extra)"
     >
-      {{ item.isI18n ? $t(item.i18nKey) : item.dictLabel }}
+      {{ item.label }}
     </NTag>
   </div>
 </template>

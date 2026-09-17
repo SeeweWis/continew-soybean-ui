@@ -42,7 +42,7 @@ getDeptList();
     class="h-full"
     :loading="loading"
     key-field="id"
-    label-field="label"
+    label-field="name"
     :options="options as []"
     v-bind="$attrs"
   />

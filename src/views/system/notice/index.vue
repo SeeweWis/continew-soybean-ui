@@ -1,41 +1,40 @@
 <script setup lang="tsx">
+import { useRouter } from 'vue-router';
 import { ref } from 'vue';
-import { NDivider } from 'naive-ui';
-import { fetchBatchDeleteNotice, fetchGetNoticeList } from '@/service/api/system/notice';
+import { NDivider, NTag } from 'naive-ui';
+import { fetchBatchDeleteNotice, fetchGetNoticePage } from '@/service/api/system';
 import { useAppStore } from '@/store/modules/app';
 import { useAuth } from '@/hooks/business/auth';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useDict } from '@/hooks/business/dict';
 import { $t } from '@/locales';
-import DictTag from '@/components/custom/dict-tag.vue';
 import ButtonIcon from '@/components/custom/button-icon.vue';
-import NoticeOperateDrawer from './modules/notice-operate-drawer.vue';
-import NoticeSearch from './modules/notice-search.vue';
+import DictTag from '@/components/custom/dict-tag.vue';
 
 defineOptions({
   name: 'NoticeList'
 });
 
-useDict('sys_notice_type');
-useDict('sys_normal_disable');
+const router = useRouter();
 const appStore = useAppStore();
 const { hasAuth } = useAuth();
 
-const searchParams = ref<Api.System.NoticeSearchParams>({
-  pageNum: 1,
-  pageSize: 10,
-  noticeTitle: null,
-  noticeType: null,
-  params: {}
+useDict('notice_type');
+
+const searchParams = ref<Api.System.ContinewNoticeQuery>({
+  page: 1,
+  size: 10,
+  title: null,
+  type: null
 });
 
 const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination, scrollX } =
   useNaivePaginatedTable({
-    api: () => fetchGetNoticeList(searchParams.value),
+    api: () => fetchGetNoticePage(searchParams.value),
     transform: response => defaultTransform(response),
     onPaginationParamsChange: params => {
-      searchParams.value.pageNum = params.page;
-      searchParams.value.pageSize = params.pageSize;
+      searchParams.value.page = params.page ?? 1;
+      searchParams.value.size = params.pageSize ?? 10;
     },
     columns: () => [
       {
@@ -44,73 +43,69 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         width: 48
       },
       {
-        key: 'noticeTitle',
+        key: 'title',
         title: '公告标题',
         align: 'center',
-        width: 300
+        minWidth: 200,
+        ellipsis: { tooltip: true }
       },
       {
-        key: 'noticeType',
+        key: 'type',
         title: '公告类型',
         align: 'center',
-        minWidth: 120,
-        render(row) {
-          return <DictTag size="small" value={row.noticeType} dictCode="sys_notice_type" />;
-        }
+        minWidth: 100,
+        render: row => (row.type ? <DictTag size="small" dictCode="notice_type" value={row.type} /> : null)
       },
       {
-        key: 'status',
-        title: '公告状态',
+        key: 'isTop',
+        title: '是否置顶',
         align: 'center',
-        minWidth: 120,
-        render(row) {
-          return <DictTag size="small" value={row.status} dictCode="sys_normal_disable" />;
-        }
+        width: 90,
+        render: row => (row.isTop ? <NTag type="warning">是</NTag> : null)
       },
       {
-        key: 'createByName',
-        title: '创建者',
+        key: 'publishTime',
+        title: '发布时间',
         align: 'center',
-        minWidth: 120
+        minWidth: 150
       },
       {
-        key: 'createTime',
-        title: '创建时间',
+        key: 'createUserString',
+        title: '创建人',
         align: 'center',
-        minWidth: 120
+        minWidth: 100
       },
       {
         key: 'operate',
         title: $t('common.operate'),
         align: 'center',
-        width: 130,
+        width: 200,
         render: row => {
-          const divider = () => {
-            if (!hasAuth('system:notice:edit') || !hasAuth('system:notice:remove')) {
-              return null;
-            }
-            return <NDivider vertical />;
+          const viewBtn = () => {
+            return (
+              <ButtonIcon
+                text
+                type="primary"
+                icon="material-symbols:visibility-outline-rounded"
+                tooltipContent="查看"
+                onClick={() => routerPushView(row.id)}
+              />
+            );
           };
-
           const editBtn = () => {
-            if (!hasAuth('system:notice:edit')) {
-              return null;
-            }
+            if (!hasAuth('system:notice:update')) return null;
             return (
               <ButtonIcon
                 text
                 type="primary"
                 icon="material-symbols:drive-file-rename-outline-outline"
                 tooltipContent={$t('common.edit')}
-                onClick={() => edit(row.noticeId!)}
+                onClick={() => routerPushAdd(String(row.id))}
               />
             );
           };
-
           const deleteBtn = () => {
-            if (!hasAuth('system:notice:remove')) {
-              return null;
-            }
+            if (!hasAuth('system:notice:delete')) return null;
             return (
               <ButtonIcon
                 text
@@ -118,15 +113,16 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
                 icon="material-symbols:delete-outline"
                 tooltipContent={$t('common.delete')}
                 popconfirmContent={$t('common.confirmDelete')}
-                onPositiveClick={() => handleDelete(row.noticeId!)}
+                onPositiveClick={() => handleDelete(row.id)}
               />
             );
           };
-
           return (
             <div class="flex-center gap-8px">
+              {viewBtn()}
+              {editBtn() && <NDivider vertical />}
               {editBtn()}
-              {divider()}
+              {deleteBtn() && <NDivider vertical />}
               {deleteBtn()}
             </div>
           );
@@ -135,45 +131,81 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
     ]
   });
 
-const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onBatchDeleted, onDeleted } =
-  useTableOperate(data, 'noticeId', getData);
+const { checkedRowKeys, onBatchDeleted } = useTableOperate(data, 'id', getData);
+
+async function handleDelete(id: CommonType.IdType) {
+  const { error } = await fetchBatchDeleteNotice([id]);
+  if (error) return;
+  window.$message?.success($t('common.deleteSuccess'));
+  await getData();
+}
 
 async function handleBatchDelete() {
-  // request
   const { error } = await fetchBatchDeleteNotice(checkedRowKeys.value);
   if (error) return;
   onBatchDeleted();
 }
 
-async function handleDelete(noticeId: CommonType.IdType) {
-  // request
-  const { error } = await fetchBatchDeleteNotice([noticeId]);
-  if (error) return;
-  onDeleted();
+function routerPushAdd(id?: string) {
+  router.push({ path: '/system/notice/add', query: id ? { id } : {} });
 }
 
-async function edit(noticeId: CommonType.IdType) {
-  handleEdit(noticeId);
+function routerPushView(id: CommonType.IdType) {
+  router.push({ path: '/system/notice/view', query: { id: String(id) } });
+}
+
+function handleResetSearch() {
+  searchParams.value.title = null;
+  searchParams.value.type = null;
+  getDataByPage();
 }
 </script>
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <NoticeSearch v-model:model="searchParams" @search="getDataByPage" />
-    <NCard title="通知公告列表" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
-      <template #header-extra>
-        <TableHeaderOperation
-          v-model:columns="columnChecks"
-          :disabled-delete="checkedRowKeys.length === 0"
-          :loading="loading"
-          :show-add="hasAuth('system:notice:add')"
-          :show-delete="hasAuth('system:notice:remove')"
-          :show-export="false"
-          @add="handleAdd"
-          @delete="handleBatchDelete"
-          @refresh="getData"
-        />
-      </template>
+    <NCard :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
+      <div class="mb-12px flex flex-wrap items-center justify-between gap-12px">
+        <NSpace>
+          <NInput
+            v-model:value="searchParams.title"
+            clearable
+            class="w-240px"
+            placeholder="搜索标题"
+            @keyup.enter="() => getDataByPage()"
+          >
+            <template #prefix><SvgIcon icon="material-symbols:search-rounded" /></template>
+          </NInput>
+          <DictSelect
+            v-model:value="searchParams.type"
+            clearable
+            class="w-150px"
+            dict-code="notice_type"
+            placeholder="请选择分类"
+            @update:value="() => getDataByPage()"
+          />
+          <NButton size="small" @click="handleResetSearch">
+            <template #icon><icon-ic-round-refresh class="text-icon" /></template>
+            重置
+          </NButton>
+        </NSpace>
+        <NSpace>
+          <NButton v-if="hasAuth('system:notice:create')" type="primary" size="small" @click="routerPushAdd()">
+            <template #icon>
+              <icon-material-symbols-add-rounded class="text-icon" />
+            </template>
+            发布公告
+          </NButton>
+          <TableHeaderOperation
+            v-model:columns="columnChecks"
+            :disabled-delete="checkedRowKeys.length === 0"
+            :loading="loading"
+            :show-add="false"
+            :show-delete="hasAuth('system:notice:delete')"
+            @delete="handleBatchDelete"
+            @refresh="getData"
+          />
+        </NSpace>
+      </div>
       <NDataTable
         v-model:checked-row-keys="checkedRowKeys"
         :columns="columns"
@@ -183,15 +215,9 @@ async function edit(noticeId: CommonType.IdType) {
         :scroll-x="scrollX"
         :loading="loading"
         remote
-        :row-key="row => row.noticeId"
+        :row-key="row => row.id"
         :pagination="mobilePagination"
         class="sm:h-full"
-      />
-      <NoticeOperateDrawer
-        v-model:visible="drawerVisible"
-        :operate-type="operateType"
-        :row-data="editingData"
-        @submitted="getData"
       />
     </NCard>
   </div>

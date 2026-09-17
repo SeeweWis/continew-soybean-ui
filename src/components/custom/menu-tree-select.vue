@@ -2,10 +2,8 @@
 import { onMounted } from 'vue';
 import type { TreeOption } from 'naive-ui';
 import { useLoading } from '@sa/hooks';
-import { fetchGetMenuList } from '@/service/api/system';
-import { handleTree } from '@/utils/common';
+import { fetchGetMenuTree } from '@/service/api/system';
 import SvgIcon from '@/components/custom/svg-icon.vue';
-import { $t } from '@/locales';
 
 defineOptions({
   name: 'MenuTreeSelect',
@@ -22,43 +20,48 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const value = defineModel<CommonType.IdType | null>('value', { required: false });
-const options = defineModel<Api.System.MenuList>('options', { required: false, default: [] });
+const options = defineModel<Api.System.ContinewMenu[]>('options', { required: false, default: [] });
 
 const { loading, startLoading, endLoading } = useLoading();
 
-async function getMenuList() {
+async function getMenuTree() {
   startLoading();
-  const { error, data } = await fetchGetMenuList();
-  if (error) return;
-  const { tree } = handleTree(data, { idField: 'menuId', filterFn: item => item.menuType !== 'F' });
+  const { error, data } = await fetchGetMenuTree();
+  if (error) {
+    endLoading();
+    return;
+  }
+  // 上级菜单仅可选目录和菜单，根节点为 0
+  const filterButtons = (menus: Api.System.ContinewMenu[]): Api.System.ContinewMenu[] =>
+    menus
+      .filter(item => item.type !== 3)
+      .map(item => ({ ...item, children: item.children ? filterButtons(item.children) : undefined }));
   options.value = [
     {
-      menuId: 0,
-      menuName: '根目录',
-      icon: 'material-symbols:home-outline-rounded',
-      children: tree
+      id: 0,
+      title: '根目录',
+      parentId: 0,
+      type: 1,
+      status: 1,
+      children: filterButtons(data)
     }
-  ] as Api.System.MenuList;
+  ];
   endLoading();
 }
 
 onMounted(() => {
   if (props.immediate) {
-    getMenuList();
+    getMenuTree();
   }
 });
 
 function renderLabel({ option }: { option: TreeOption }) {
-  let label = String(option.menuName);
-  if (label?.startsWith('route.') || label?.startsWith('menu.')) {
-    label = $t(label as App.I18n.I18nKey);
-  }
-  return <div>{label}</div>;
+  return <div>{String(option.title)}</div>;
 }
 
 function renderPrefix({ option }: { option: TreeOption }) {
-  const renderLocalIcon = String(option.icon).startsWith('local-icon-');
-  const icon = renderLocalIcon ? undefined : String(option.icon);
+  const renderLocalIcon = String(option.icon ?? '').startsWith('local-icon-');
+  const icon = renderLocalIcon ? undefined : String(option.icon ?? '');
   const localIcon = renderLocalIcon ? String(option.icon).replace('local-icon-', 'menu-') : undefined;
   return <SvgIcon icon={icon} localIcon={localIcon} />;
 }
@@ -70,11 +73,10 @@ function renderPrefix({ option }: { option: TreeOption }) {
     filterable
     class="h-full"
     :loading="loading"
-    key-field="menuId"
-    label-field="menuName"
-    :options="options"
+    key-field="id"
+    label-field="title"
+    :options="(options as unknown as TreeOption[])"
     :default-expanded-keys="[0]"
-    :render-tag="renderLabel"
     :render-label="renderLabel"
     :render-prefix="renderPrefix"
     v-bind="$attrs"

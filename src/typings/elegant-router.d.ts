@@ -25,34 +25,44 @@ declare module "@elegant-router/types" {
     "404": "/404";
     "500": "/500";
     "about": "/about";
-    "demo": "/demo";
-    "demo_demo": "/demo/demo";
-    "demo_tree": "/demo/tree";
+    "code": "/code";
+    "code_generator": "/code/generator";
     "home": "/home";
     "iframe-page": "/iframe-page/:url";
     "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?";
     "monitor": "/monitor";
-    "monitor_cache": "/monitor/cache";
-    "monitor_logininfor": "/monitor/logininfor";
+    "monitor_log": "/monitor/log";
     "monitor_online": "/monitor/online";
-    "monitor_operlog": "/monitor/operlog";
+    "monitor_sms": "/monitor/sms";
+    "monitor_sms_log": "/monitor/sms/log";
+    "open": "/open";
+    "open_app": "/open/app";
+    "schedule": "/schedule";
+    "schedule_job": "/schedule/job";
+    "schedule_log": "/schedule/log";
     "social-callback": "/social-callback";
     "system": "/system";
-    "system_client": "/system/client";
     "system_config": "/system/config";
+    "system_config_client": "/system/config/client";
+    "system_config_login": "/system/config/login";
+    "system_config_mail": "/system/config/mail";
+    "system_config_security": "/system/config/security";
+    "system_config_site": "/system/config/site";
+    "system_config_sms": "/system/config/sms";
+    "system_config_storage": "/system/config/storage";
     "system_dept": "/system/dept";
     "system_dict": "/system/dict";
+    "system_dict_item": "/system/dict/item";
+    "system_file": "/system/file";
     "system_menu": "/system/menu";
     "system_notice": "/system/notice";
-    "system_oss": "/system/oss";
-    "system_oss-config": "/system/oss-config";
-    "system_post": "/system/post";
+    "system_notice_add": "/system/notice/add";
+    "system_notice_view": "/system/notice/view";
     "system_role": "/system/role";
-    "system_tenant": "/system/tenant";
-    "system_tenant-package": "/system/tenant-package";
     "system_user": "/system/user";
-    "tool": "/tool";
-    "tool_gen": "/tool/gen";
+    "tenant": "/tenant";
+    "tenant_management": "/tenant/management";
+    "tenant_package": "/tenant/package";
     "user-center": "/user-center";
   };
 
@@ -93,14 +103,16 @@ declare module "@elegant-router/types" {
     | "404"
     | "500"
     | "about"
-    | "demo"
+    | "code"
     | "home"
     | "iframe-page"
     | "login"
     | "monitor"
+    | "open"
+    | "schedule"
     | "social-callback"
     | "system"
-    | "tool"
+    | "tenant"
     | "user-center"
   >;
 
@@ -127,27 +139,34 @@ declare module "@elegant-router/types" {
     | "social-callback"
     | "user-center"
     | "about"
-    | "demo_demo"
-    | "demo_tree"
+    | "code_generator"
     | "home"
-    | "monitor_cache"
-    | "monitor_logininfor"
+    | "monitor_log"
     | "monitor_online"
-    | "monitor_operlog"
-    | "system_client"
+    | "monitor_sms_log"
+    | "open_app"
+    | "schedule_job"
+    | "schedule_log"
+    | "system_config_client"
     | "system_config"
+    | "system_config_login"
+    | "system_config_mail"
+    | "system_config_security"
+    | "system_config_site"
+    | "system_config_sms"
+    | "system_config_storage"
     | "system_dept"
     | "system_dict"
+    | "system_dict_item"
+    | "system_file"
     | "system_menu"
+    | "system_notice_add"
     | "system_notice"
-    | "system_oss-config"
-    | "system_oss"
-    | "system_post"
+    | "system_notice_view"
     | "system_role"
-    | "system_tenant-package"
-    | "system_tenant"
     | "system_user"
-    | "tool_gen"
+    | "tenant_management"
+    | "tenant_package"
   >;
 
   /**

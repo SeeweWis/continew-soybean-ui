@@ -10,6 +10,257 @@ declare namespace Api {
    * backend api module: "system"
    */
   namespace System {
+    /** label-value 字典项（后端 LabelValueResp） */
+    type LabelValue = {
+      label: string;
+      value: string | number;
+      disabled?: boolean;
+      /** 附加信息（字典项 color，用于标签展示） */
+      extra?: string | number;
+    };
+
+    /** 字典（后端 DictResp） */
+    type ContinewDict = {
+      id: CommonType.IdType;
+      name: string;
+      code: string;
+      description?: string;
+      isSystem?: boolean;
+      createUserString?: string;
+      createTime?: string;
+      updateUserString?: string;
+      updateTime?: string;
+      disabled?: boolean;
+    };
+
+    /** 字典创建/修改请求（后端 DictReq） */
+    type ContinewDictReq = {
+      name: string;
+      code: string;
+      description?: string;
+    };
+
+    /** 字典列表查询参数 */
+    type ContinewDictQuery = {
+      description?: string | null;
+    };
+
+    /** 角色（后端 RoleResp / RoleDetailResp） */
+    type ContinewRole = {
+      id: CommonType.IdType;
+      name: string;
+      code: string;
+      dataScope?: 1 | 2 | 3 | 4 | 5;
+      sort?: number;
+      isSystem?: boolean;
+      menuCheckStrictly?: boolean;
+      deptCheckStrictly?: boolean;
+      description?: string;
+      menuIds?: CommonType.IdType[];
+      deptIds?: CommonType.IdType[];
+      createUserString?: string;
+      createTime?: string;
+      updateUserString?: string;
+      updateTime?: string;
+      disabled?: boolean;
+    };
+
+    /** 角色创建/修改请求（后端 RoleReq） */
+    type ContinewRoleReq = {
+      name: string;
+      code: string;
+      sort?: number;
+      description?: string;
+      dataScope?: 1 | 2 | 3 | 4 | 5;
+      deptIds?: CommonType.IdType[];
+      deptCheckStrictly?: boolean;
+    };
+
+    /** 角色功能权限修改请求（后端 RolePermissionUpdateReq） */
+    type ContinewRolePermissionReq = {
+      menuIds: CommonType.IdType[];
+      menuCheckStrictly?: boolean;
+    };
+
+    /** 角色功能权限树节点（后端 RolePermissionResp） */
+    type ContinewRolePermission = {
+      id: CommonType.IdType;
+      title: string;
+      parentId: CommonType.IdType;
+      type: 1 | 2 | 3;
+      permission?: string;
+      children?: ContinewRolePermission[];
+    };
+
+    /** 角色用户（后端 RoleUserResp） */
+    type ContinewRoleUser = {
+      id: CommonType.IdType;
+      userId: CommonType.IdType;
+      username: string;
+      nickname: string;
+      gender?: 0 | 1 | 2;
+      status?: 1 | 2;
+      deptName?: string;
+    };
+
+    type ContinewRoleUserPage = {
+      list: ContinewRoleUser[];
+      total: number;
+    };
+
+    type ContinewRoleUserQuery = {
+      page: number;
+      size: number;
+      description?: string | null;
+    };
+
+    /** 角色列表查询参数 */
+    type ContinewRoleQuery = {
+      description?: string | null;
+    };
+
+    /** 菜单（后端 MenuResp） */
+    type ContinewMenu = {
+      id: CommonType.IdType;
+      title: string;
+      parentId: CommonType.IdType;
+      /** 类型（1 目录、2 菜单、3 按钮） */
+      type: 1 | 2 | 3;
+      path?: string;
+      name?: string;
+      component?: string;
+      redirect?: string;
+      icon?: string;
+      isExternal?: boolean;
+      isCache?: boolean;
+      isHidden?: boolean;
+      permission?: string;
+      sort?: number;
+      status: 1 | 2;
+      createUserString?: string;
+      createTime?: string;
+      updateUserString?: string;
+      updateTime?: string;
+      disabled?: boolean;
+      children?: ContinewMenu[];
+    };
+
+    /** 菜单创建/修改请求（后端 MenuReq） */
+    type ContinewMenuReq = {
+      type: 1 | 2 | 3;
+      icon?: string | null;
+      title: string;
+      sort: number;
+      permission?: string | null;
+      path?: string | null;
+      name?: string | null;
+      component?: string | null;
+      redirect?: string | null;
+      isExternal?: boolean;
+      isCache?: boolean;
+      isHidden?: boolean;
+      parentId?: CommonType.IdType;
+      status: 1 | 2;
+    };
+
+    /** 菜单树查询参数 */
+    type ContinewMenuQuery = {
+      title?: string | null;
+      status?: 1 | 2 | null;
+    };
+
+    /** 部门（后端 DeptResp） */
+    type ContinewDept = {
+      id: CommonType.IdType;
+      name: string;
+      parentId: CommonType.IdType;
+      status: 1 | 2;
+      sort?: number;
+      isSystem?: boolean;
+      description?: string;
+      children?: ContinewDept[];
+    };
+
+    /** 部门创建/修改请求（后端 DeptReq） */
+    type ContinewDeptReq = {
+      parentId: CommonType.IdType;
+      name: string;
+      sort?: number;
+      description?: string | null;
+      status?: 1 | 2;
+    };
+
+    /** 部门树查询参数 */
+    type ContinewDeptQuery = {
+      description?: string | null;
+      status?: 1 | 2 | null;
+    };
+
+    /** 参数（后端 OptionResp） */
+    type ContinewOption = {
+      id: CommonType.IdType;
+      name: string;
+      code: string;
+      value: string | null;
+      description?: string;
+    };
+
+    /** 参数修改请求（后端 OptionReq） */
+    type ContinewOptionReq = {
+      id: CommonType.IdType;
+      code: string;
+      value: string | null;
+    };
+
+    /** 用户社交绑定（后端 UserSocialBindResp） */
+    type ContinewSocial = {
+      source: string;
+      description?: string;
+    };
+
+    /** 字典项（后端 DictItemResp，status 为启用状态 1/2） */
+    type ContinewDictItem = {
+      id: CommonType.IdType;
+      label: string;
+      value: string | number;
+      color?: string;
+      status: 1 | 2;
+      sort?: number;
+      description?: string;
+      dictId: CommonType.IdType;
+      createUserString?: string;
+      createTime?: string;
+      updateUserString?: string;
+      updateTime?: string;
+      disabled?: boolean;
+    };
+
+    /** 字典项创建/修改请求（后端 DictItemReq） */
+    type ContinewDictItemReq = {
+      label: string;
+      value: string | number;
+      color?: string | null;
+      sort?: number;
+      description?: string | null;
+      status?: 1 | 2;
+      dictId: CommonType.IdType;
+    };
+
+    /** 字典项分页响应 */
+    type ContinewDictItemPage = {
+      list: ContinewDictItem[];
+      total: number;
+    };
+
+    /** 字典项分页查询参数 */
+    type ContinewDictItemQuery = {
+      description?: string | null;
+      status?: 1 | 2 | null;
+      dictId?: CommonType.IdType | null;
+      page: number;
+      size: number;
+    };
+
     /** data scope */
     type DataScope = '1' | '2' | '3' | '4' | '5' | '6';
 
@@ -169,6 +420,57 @@ declare namespace Api {
 
     /** user list */
     type UserList = Common.PaginatingQueryRecord<User>;
+
+    type ContinewUserStatus = 1 | 2;
+
+    type ContinewUser = {
+      id: CommonType.IdType;
+      username: string;
+      nickname: string;
+      gender: 0 | 1 | 2;
+      avatar?: string;
+      email?: string;
+      phone?: string;
+      status: ContinewUserStatus;
+      isSystem?: boolean;
+      description?: string;
+      deptId: CommonType.IdType;
+      deptName?: string;
+      roleIds?: CommonType.IdType[];
+      roleNames?: string[];
+      createTime?: string;
+      updateTime?: string;
+      disabled?: boolean;
+    };
+
+    type ContinewUserQuery = {
+      page: number;
+      size: number;
+      description?: string | null;
+      deptId?: CommonType.IdType | null;
+      roleId?: CommonType.IdType | null;
+      status?: ContinewUserStatus | null;
+      createTime?: [string, string] | null;
+      sort?: string[];
+    };
+
+    type ContinewUserReq = {
+      username: string;
+      nickname: string;
+      password?: string;
+      email?: string;
+      phone?: string;
+      gender: 0 | 1 | 2;
+      deptId: CommonType.IdType;
+      roleIds: CommonType.IdType[];
+      description?: string;
+      status?: ContinewUserStatus;
+    };
+
+    type ContinewUserPage = {
+      list: ContinewUser[];
+      total: number;
+    };
 
     /** auth role */
     type AuthRole = {
@@ -830,5 +1132,364 @@ declare namespace Api {
 
     /** oss config list */
     type OssConfigList = Api.Common.PaginatingQueryRecord<OssConfig>;
+
+    /** 客户端（后端 ClientResp） */
+    type ContinewClient = {
+      id: CommonType.IdType;
+      clientId: string;
+      clientType: string;
+      /** 认证类型（ACCOUNT/EMAIL/PHONE/SOCIAL） */
+      authType: string[];
+      activeTimeout: number;
+      timeout: number;
+      isConcurrent: boolean;
+      replacedRange?: string;
+      maxLoginCount: number;
+      overflowLogoutMode?: string;
+      status: 1 | 2;
+      createTime?: string;
+    };
+
+    /** 客户端创建/修改请求（后端 ClientReq） */
+    type ContinewClientReq = {
+      clientType: string;
+      authType: string[];
+      activeTimeout: number;
+      timeout: number;
+      isConcurrent: boolean;
+      replacedRange?: string | null;
+      maxLoginCount: number;
+      overflowLogoutMode?: string | null;
+      status?: 1 | 2;
+    };
+
+    type ContinewClientPage = {
+      list: ContinewClient[];
+      total: number;
+    };
+
+    type ContinewClientQuery = {
+      page: number;
+      size: number;
+      clientType?: string | null;
+      authType?: string | null;
+      status?: 1 | 2 | null;
+    };
+
+    /** 公告（后端 NoticeResp） */
+    type ContinewNotice = {
+      id: CommonType.IdType;
+      title: string;
+      /** 类型（对应字典 notice_type） */
+      type: string | null;
+      noticeScope?: string;
+      noticeMethods?: number[];
+      isTiming?: boolean;
+      publishTime?: string;
+      isTop?: boolean;
+      status?: string;
+      isRead?: boolean;
+      /** 内容（详情返回） */
+      content?: string;
+      createUserString?: string;
+      createTime?: string;
+    };
+
+    /** 公告创建/修改请求（后端 NoticeReq） */
+    type ContinewNoticeReq = {
+      title: string;
+      content: string;
+      type: string | null;
+      noticeScope: string;
+      noticeMethods?: number[];
+      isTiming: boolean;
+      publishTime?: string;
+      isTop?: boolean;
+      status?: string;
+    };
+
+    type ContinewNoticePage = {
+      list: ContinewNotice[];
+      total: number;
+    };
+
+    type ContinewNoticeQuery = {
+      page: number;
+      size: number;
+      title?: string | null;
+      type?: string | null;
+    };
+
+    /** 租户（后端 TenantResp） */
+    type ContinewTenant = {
+      id: CommonType.IdType;
+      name: string;
+      code: string;
+      domain?: string;
+      expireTime?: string;
+      description?: string;
+      status: 1 | 2;
+      adminUser?: string;
+      adminUsername?: string;
+      packageId: CommonType.IdType;
+      packageName?: string;
+      createTime?: string;
+    };
+
+    /** 租户创建/修改请求（后端 TenantReq） */
+    type ContinewTenantReq = {
+      name: string;
+      code: string;
+      domain?: string | null;
+      expireTime?: string | null;
+      description?: string | null;
+      status?: 1 | 2;
+      packageId: CommonType.IdType;
+      adminUsername?: string;
+      /** 明文密码（创建时必填） */
+      adminPassword?: string;
+    };
+
+    type ContinewTenantPage = {
+      list: ContinewTenant[];
+      total: number;
+    };
+
+    type ContinewTenantQuery = {
+      page: number;
+      size: number;
+      description?: string | null;
+      code?: string | null;
+      domain?: string | null;
+      packageId?: CommonType.IdType | null;
+    };
+
+    /** 租户套餐（后端 PackageResp） */
+    type ContinewTenantPackage = {
+      id: CommonType.IdType;
+      name: string;
+      sort?: number;
+      menuCheckStrictly?: boolean;
+      description?: string;
+      status: 1 | 2;
+      menuIds?: CommonType.IdType[];
+      createTime?: string;
+    };
+
+    /** 租户套餐创建/修改请求（后端 PackageReq） */
+    type ContinewTenantPackageReq = {
+      name: string;
+      sort?: number;
+      menuCheckStrictly?: boolean;
+      description?: string;
+      status: 1 | 2;
+      menuIds?: CommonType.IdType[];
+    };
+
+    type ContinewTenantPackagePage = {
+      list: ContinewTenantPackage[];
+      total: number;
+    };
+
+    type ContinewTenantPackageQuery = {
+      page: number;
+      size: number;
+      description?: string | null;
+      status?: 1 | 2 | null;
+    };
+
+    /** 文件（后端 FileResp） */
+    type ContinewFile = {
+      id: CommonType.IdType;
+      name: string;
+      originalName?: string;
+      size?: number;
+      url?: string;
+      parentPath?: string;
+      extension?: string;
+      contentType?: string;
+      type?: string;
+      storageId?: CommonType.IdType;
+      storageName?: string;
+      createTime?: string;
+    };
+
+    type ContinewFilePage = {
+      list: ContinewFile[];
+      total: number;
+    };
+
+    type ContinewFileQuery = {
+      page: number;
+      size: number;
+      originalName?: string | null;
+      parentPath?: string | null;
+      type?: string | null;
+    };
+
+    /** 文件上传响应（后端 FileUploadResp） */
+    type ContinewFileUploadResp = {
+      id: CommonType.IdType;
+      url: string;
+      thUrl?: string;
+      metadata?: Record<string, unknown>;
+    };
+
+    /** 上传进度（后端 UploadProgressResp） */
+    type ContinewUploadProgress = {
+      uploadTaskId?: string;
+      /** INIT/UPLOADING/FINALIZING/COMPLETED/FAILED/NOT_FOUND */
+      status?: string;
+      uploadedSize?: number;
+      totalSize?: number;
+    };
+
+    /** 分片上传初始化响应 */
+    type ContinewMultipartInitResp = {
+      uploadId: string;
+      path: string;
+      /** 分片大小（字节） */
+      partSize?: number;
+      partCount?: number;
+    };
+
+    /** 存储（后端 StorageResp） */
+    type ContinewStorage = {
+      id: CommonType.IdType;
+      name: string;
+      code: string;
+      status: 1 | 2;
+      type: string;
+      accessKey?: string;
+      endpoint?: string;
+      bucketName?: string;
+      domain?: string;
+      multipartUploadThreshold?: number;
+      multipartUploadPartSize?: number;
+      multipartTempDir?: string;
+      recycleBinEnabled?: boolean;
+      recycleBinPath?: string;
+      description?: string;
+      isDefault?: boolean;
+      sort?: number;
+      createTime?: string;
+    };
+
+    /** 存储创建/修改请求（后端 StorageReq） */
+    type ContinewStorageReq = {
+      name: string;
+      code: string;
+      type: string;
+      accessKey?: string | null;
+      secretKey?: string | null;
+      endpoint?: string | null;
+      bucketName?: string | null;
+      domain?: string | null;
+      multipartUploadThreshold?: number;
+      multipartUploadPartSize?: number;
+      multipartTempDir?: string;
+      recycleBinEnabled?: boolean;
+      recycleBinPath?: string | null;
+      sort?: number;
+      description?: string | null;
+      status?: 1 | 2;
+    };
+
+    /** 短信配置（后端 SmsConfigResp） */
+    type ContinewSmsConfig = {
+      id: CommonType.IdType;
+      name: string;
+      /** 供应商（对应字典 sms_supplier） */
+      supplier: string;
+      accessKey: string;
+      secretKey?: string;
+      signature?: string;
+      templateId?: string;
+      weight?: number;
+      retryInterval?: number;
+      maxRetries?: number;
+      maximum?: number;
+      supplierConfig?: string;
+      isDefault?: boolean;
+      status: 1 | 2;
+      createTime?: string;
+    };
+
+    /** 短信配置创建/修改请求（后端 SmsConfigReq） */
+    type ContinewSmsConfigReq = {
+      name: string;
+      supplier: string;
+      accessKey: string;
+      secretKey: string;
+      signature?: string | null;
+      templateId: string;
+      weight?: number;
+      retryInterval?: number;
+      maxRetries?: number;
+      maximum?: number;
+      supplierConfig?: string | null;
+      status?: 1 | 2;
+    };
+
+    type ContinewSmsConfigPage = {
+      list: ContinewSmsConfig[];
+      total: number;
+    };
+
+    type ContinewSmsConfigQuery = {
+      page: number;
+      size: number;
+      name?: string | null;
+      supplier?: string | null;
+      accessKey?: string | null;
+      status?: 1 | 2 | null;
+    };
+
+    /** 短信日志（后端 SmsLogResp） */
+    type ContinewSmsLog = {
+      id: CommonType.IdType;
+      configId?: CommonType.IdType;
+      phone?: string;
+      params?: string;
+      status?: string;
+      resMsg?: string;
+      createTime?: string;
+    };
+
+    type ContinewSmsLogPage = {
+      list: ContinewSmsLog[];
+      total: number;
+    };
+
+    type ContinewSmsLogQuery = {
+      page: number;
+      size: number;
+      configId?: CommonType.IdType | null;
+      phone?: string | null;
+      status?: string | null;
+    };
+
+    /** 个人消息（后端 MessageResp） */
+    type ContinewMessage = {
+      id: CommonType.IdType;
+      title: string;
+      type?: string;
+      path?: string;
+      isRead?: boolean;
+      readTime?: string;
+      createTime?: string;
+    };
+
+    type ContinewMessagePage = {
+      list: ContinewMessage[];
+      total: number;
+    };
+
+    /** 个人消息详情（后端 MessageDetailResp） */
+    type ContinewMessageDetail = ContinewMessage & {
+      content?: string;
+      scope?: string;
+      users?: string[];
+    };
   }
 }

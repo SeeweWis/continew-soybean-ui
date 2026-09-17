@@ -1,115 +1,93 @@
 <script setup lang="tsx">
-import { ref } from 'vue';
-import { NButton, NDivider } from 'naive-ui';
-import { jsonClone } from '@sa/utils';
-import { fetchBatchDeleteDept, fetchGetDeptList } from '@/service/api/system/dept';
+import { reactive, ref } from 'vue';
+import { NDivider } from 'naive-ui';
+import { fetchBatchDeleteDept, fetchGetDeptTree } from '@/service/api/system';
 import { useAppStore } from '@/store/modules/app';
 import { useAuth } from '@/hooks/business/auth';
-import { treeTransform, useNaiveTreeTable, useTableOperate } from '@/hooks/common/table';
-import { useDict } from '@/hooks/business/dict';
-import DictTag from '@/components/custom/dict-tag.vue';
+import { useDownload } from '@/hooks/business/download';
+import { useNaiveTable } from '@/hooks/common/table';
 import { $t } from '@/locales';
 import ButtonIcon from '@/components/custom/button-icon.vue';
+import DictTag from '@/components/custom/dict-tag.vue';
 import DeptOperateDrawer from './modules/dept-operate-drawer.vue';
-import DeptSearch from './modules/dept-search.vue';
 
 defineOptions({
   name: 'DeptList'
 });
 
-useDict('sys_normal_disable');
-
 const appStore = useAppStore();
 const { hasAuth } = useAuth();
+const { download } = useDownload();
 
-const searchParams = ref<Api.System.DeptSearchParams>({
-  deptName: null,
-  status: null,
-  params: {}
+const searchParams = reactive<Api.System.ContinewDeptQuery>({
+  description: null,
+  status: null
 });
 
-const {
-  columns,
-  columnChecks,
-  data,
-  rows,
-  getData,
-  loading,
-  expandedRowKeys,
-  isCollapse,
-  expandAll,
-  collapseAll,
-  scrollX
-} = useNaiveTreeTable({
-  keyField: 'deptId',
-  api: () => fetchGetDeptList(searchParams.value),
-  transform: response => treeTransform(response, { idField: 'deptId' }),
+const { columns, columnChecks, data, getData, loading, scrollX } = useNaiveTable({
+  api: () => fetchGetDeptTree(searchParams),
+  transform: response => response.data ?? [],
   columns: () => [
     {
-      key: 'deptName',
-      title: $t('page.system.dept.deptName'),
-      align: 'center',
-      width: 230,
-      ellipsis: true
+      key: 'name',
+      title: '部门名称',
+      minWidth: 180,
+      ellipsis: { tooltip: true }
     },
     {
-      key: 'deptCategory',
-      title: $t('page.system.dept.deptCategory'),
+      key: 'sort',
+      title: '排序',
       align: 'center',
-      minWidth: 120
-    },
-    {
-      key: 'orderNum',
-      title: $t('page.system.dept.sort'),
-      align: 'center',
-      minWidth: 60
+      width: 80
     },
     {
       key: 'status',
-      title: $t('page.system.dept.status'),
+      title: '状态',
       align: 'center',
-      minWidth: 120,
-      render(row) {
-        return <DictTag size="small" value={row.status} dictCode="sys_normal_disable" />;
-      }
+      width: 90,
+      render: row => <DictTag dictCode="dis_enable_status" value={(row as unknown as Api.System.ContinewDept).status} size="small" />
     },
     {
-      key: 'createTime',
-      title: $t('page.system.dept.createTime'),
+      key: 'description',
+      title: '描述',
       align: 'center',
-      minWidth: 120
+      minWidth: 140,
+      ellipsis: { tooltip: true }
     },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 150,
+      width: 190,
       render: row => {
-        const addBtn = () => {
+        const addChildBtn = () => {
+          if (!hasAuth('system:dept:create')) return null;
           return (
             <ButtonIcon
               text
               type="primary"
-              icon="material-symbols:add-2-rounded"
-              tooltipContent={$t('common.add')}
-              onClick={() => addInRow(row)}
+              icon="material-symbols:add-rounded"
+              tooltipContent="新增下级"
+              onClick={() => handleAddChild(row.id)}
             />
           );
         };
 
         const editBtn = () => {
+          if (!hasAuth('system:dept:update')) return null;
           return (
             <ButtonIcon
               text
               type="primary"
               icon="material-symbols:drive-file-rename-outline-outline"
               tooltipContent={$t('common.edit')}
-              onClick={() => edit(row.deptId)}
+              onClick={() => handleEdit(row.id)}
             />
           );
         };
 
         const deleteBtn = () => {
+          if (!hasAuth('system:dept:delete')) return null;
           return (
             <ButtonIcon
               text
@@ -117,24 +95,18 @@ const {
               icon="material-symbols:delete-outline"
               tooltipContent={$t('common.delete')}
               popconfirmContent={$t('common.confirmDelete')}
-              onPositiveClick={() => handleDelete(row.deptId)}
+              onPositiveClick={() => handleDelete(row.id)}
             />
           );
         };
 
-        const buttons = [];
-        if (hasAuth('system:dept:add')) buttons.push(addBtn());
-        if (hasAuth('system:dept:edit')) buttons.push(editBtn());
-        if (hasAuth('system:dept:remove')) buttons.push(deleteBtn());
-
         return (
           <div class="flex-center gap-8px">
-            {buttons.map((btn, index) => (
-              <>
-                {index !== 0 && <NDivider vertical />}
-                {btn}
-              </>
-            ))}
+            {addChildBtn()}
+            {addChildBtn() && editBtn() && <NDivider vertical />}
+            {editBtn()}
+            {editBtn() && deleteBtn() && <NDivider vertical />}
+            {deleteBtn()}
           </div>
         );
       }
@@ -142,73 +114,108 @@ const {
   ]
 });
 
-const { drawerVisible, operateType, editingData, handleAdd, handleEdit, onDeleted } = useTableOperate(
-  rows,
-  'deptId',
-  getData
-);
+const drawerVisible = ref(false);
+const operateType = ref<NaiveUI.TableOperateType>('add');
+const editingData = ref<Api.System.ContinewDept | null>(null);
+/** 新增下级时预选的父部门 */
+const defaultParentId = ref<CommonType.IdType | null>(null);
 
-async function handleDelete(deptId: CommonType.IdType) {
-  // request
-  const { error } = await fetchBatchDeleteDept([deptId]);
+function findDept(depts: Api.System.ContinewDept[], id: CommonType.IdType): Api.System.ContinewDept | null {
+  for (const dept of depts) {
+    if (dept.id === id) return dept;
+    if (dept.children) {
+      const found = findDept(dept.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function handleAdd() {
+  operateType.value = 'add';
+  editingData.value = null;
+  defaultParentId.value = null;
+  drawerVisible.value = true;
+}
+
+function handleAddChild(parentId: CommonType.IdType) {
+  operateType.value = 'add';
+  editingData.value = null;
+  defaultParentId.value = parentId;
+  drawerVisible.value = true;
+}
+
+function handleEdit(id: CommonType.IdType) {
+  const findItem = findDept(data.value as unknown as Api.System.ContinewDept[], id);
+  operateType.value = 'edit';
+  editingData.value = findItem ? { ...findItem, children: undefined } : null;
+  drawerVisible.value = true;
+}
+
+async function handleDelete(id: CommonType.IdType) {
+  const { error } = await fetchBatchDeleteDept([id]);
   if (error) return;
-  onDeleted();
+  window.$message?.success($t('common.deleteSuccess'));
+  await getData();
 }
 
-function edit(deptId: CommonType.IdType) {
-  handleEdit(deptId);
+async function handleResetSearch() {
+  searchParams.description = null;
+  searchParams.status = null;
+  await getData();
 }
 
-function addInRow(row: Api.System.Dept) {
-  editingData.value = jsonClone(row);
-  handleAdd();
+function handleExport() {
+  download('/system/dept/export', searchParams, `部门_${new Date().getTime()}.xlsx`);
 }
 </script>
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <DeptSearch v-model:model="searchParams" @search="getData" />
-    <NCard :title="$t('page.system.dept.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
-      <template #header-extra>
+    <NCard :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
+      <div class="mb-12px flex flex-wrap items-center justify-between gap-12px">
+        <NSpace>
+          <NInput
+            v-model:value="searchParams.description"
+            clearable
+            class="w-240px"
+            placeholder="搜索名称"
+            @keyup.enter="getData"
+          >
+            <template #prefix><SvgIcon icon="material-symbols:search-rounded" /></template>
+          </NInput>
+          <NButton size="small" @click="handleResetSearch">
+            <template #icon><icon-ic-round-refresh class="text-icon" /></template>
+            重置
+          </NButton>
+        </NSpace>
         <TableHeaderOperation
           v-model:columns="columnChecks"
           :loading="loading"
-          :show-add="hasAuth('system:dept:add')"
+          :show-add="hasAuth('system:dept:create')"
           :show-delete="false"
+          :show-export="hasAuth('system:dept:export')"
           @add="handleAdd"
           @refresh="getData"
-        >
-          <template #prefix>
-            <NButton v-if="!isCollapse" :disabled="!data.length" size="small" @click="expandAll">
-              <template #icon>
-                <icon-quill-expand />
-              </template>
-              {{ $t('page.system.dept.expandAll') }}
-            </NButton>
-            <NButton v-if="isCollapse" :disabled="!data.length" size="small" @click="collapseAll">
-              <template #icon>
-                <icon-quill-collapse />
-              </template>
-              {{ $t('page.system.dept.collapseAll') }}
-            </NButton>
-          </template>
-        </TableHeaderOperation>
-      </template>
+          @export="handleExport"
+        />
+      </div>
       <NDataTable
-        v-model:expanded-row-keys="expandedRowKeys"
         :columns="columns"
         :data="data"
         size="small"
         :flex-height="!appStore.isMobile"
         :scroll-x="scrollX"
         :loading="loading"
-        :row-key="row => row.deptId"
-        class="sm:h-full"
+        :row-key="row => row.id"
+        default-expand-all
+        class="h-full"
       />
       <DeptOperateDrawer
         v-model:visible="drawerVisible"
         :operate-type="operateType"
         :row-data="editingData"
+        :default-parent-id="defaultParentId"
         @submitted="getData"
       />
     </NCard>

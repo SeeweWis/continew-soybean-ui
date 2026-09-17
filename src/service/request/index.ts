@@ -3,12 +3,9 @@ import { BACKEND_ERROR_CODE, REQUEST_CANCELED_CODE, createFlatRequest } from '@s
 import { useAuthStore } from '@/store/modules/auth';
 import { localStg, sessionStg } from '@/utils/storage';
 import { getServiceBaseURL } from '@/utils/service';
-import { decryptBase64, decryptWithAes, encryptBase64, encryptWithAes, generateAesKey } from '@/utils/crypto';
-import { decrypt, encrypt } from '@/utils/jsencrypt';
 import { getAuthorization, handleExpiredRequest, showErrorMsg } from './shared';
 import type { RequestInstanceState } from './type';
 
-const encryptHeader = import.meta.env.VITE_HEADER_FLAG || 'encrypt-key';
 const isHttpProxy = import.meta.env.DEV && import.meta.env.VITE_HTTP_PROXY === 'Y';
 const { baseURL } = getServiceBaseURL(import.meta.env, isHttpProxy);
 
@@ -45,14 +42,15 @@ export const request = createFlatRequest(
         Object.assign(config.headers, { Authorization });
       }
 
-      // 客户端 ID
-      config.headers.Clientid = import.meta.env.VITE_APP_CLIENT_ID;
+      // 租户上下文请求头，后端默认租户 ID 为 0
+      const tenantId = localStg.get('tenantId');
+      if (tenantId !== null) {
+        config.headers['X-Tenant-Id'] = tenantId;
+      }
       // 对应国际化资源文件后缀
       config.headers['Content-Language'] = (localStg.get('lang') || 'zh-CN').replace('-', '_');
 
       handleRepeatSubmit(config);
-
-      handleEncrypt(config);
 
       // FormData数据去请求头Content-Type
       if (config.data instanceof FormData) {
@@ -62,17 +60,7 @@ export const request = createFlatRequest(
       return config;
     },
     isBackendSuccess(response) {
-      // when the backend response code is "0000"(default), it means the request is success
-      // to change this logic by yourself, you can modify the `VITE_SERVICE_SUCCESS_CODE` in `.env` file
-      if (import.meta.env.VITE_APP_ENCRYPT === 'Y' && response.headers[encryptHeader]) {
-        const keyStr = response.headers[encryptHeader];
-        const data = String(response.data);
-        const base64Str = decrypt(keyStr);
-        const aesKey = decryptBase64(base64Str.toString());
-        const decryptData = decryptWithAes(data, aesKey);
-        response.data = JSON.parse(decryptData);
-      }
-      return String(response.data.code) === import.meta.env.VITE_SERVICE_SUCCESS_CODE;
+      return Number(response.data.code) === 0;
     },
     async onBackendFail(response, instance) {
       const authStore = useAuthStore();
@@ -205,24 +193,6 @@ function handleRepeatSubmit(config: InternalAxiosRequestConfig) {
         throw new Error(message);
       }
       sessionStg.set('sessionObj', requestObj);
-    }
-  }
-}
-
-function handleEncrypt(config: InternalAxiosRequestConfig) {
-  // 是否需要加密
-  const isEncrypt = config.headers?.isEncrypt === 'true';
-
-  if (import.meta.env.VITE_APP_ENCRYPT === 'Y') {
-    // 当开启参数加密
-    if (isEncrypt && (config.method === 'post' || config.method === 'put')) {
-      // 生成一个 AES 密钥
-      const aesKey = generateAesKey();
-      config.headers[encryptHeader] = encrypt(encryptBase64(aesKey));
-      config.data =
-        typeof config.data === 'object'
-          ? encryptWithAes(JSON.stringify(config.data), aesKey)
-          : encryptWithAes(config.data, aesKey);
     }
   }
 }

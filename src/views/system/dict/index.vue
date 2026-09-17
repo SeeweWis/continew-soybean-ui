@@ -1,25 +1,21 @@
 <script setup lang="tsx">
 import { computed, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { NEllipsis } from 'naive-ui';
 import type { TreeOption } from 'naive-ui';
-import { NDivider, NEllipsis, NTooltip } from 'naive-ui';
 import { useBoolean, useLoading } from '@sa/hooks';
 import {
-  fetchBatchDeleteDictData,
-  fetchBatchDeleteDictType,
-  fetchGetDictDataList,
-  fetchGetDictTypeOption,
-  fetchRefreshCache
+  fetchBatchDeleteDict,
+  fetchBatchDeleteDictItem,
+  fetchClearDictCache,
+  fetchGetDictItemList,
+  fetchGetDictList
 } from '@/service/api/system';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
-import { useDict } from '@/hooks/business/dict';
 import { useAuth } from '@/hooks/business/auth';
-import { useDownload } from '@/hooks/business/download';
-import { handleCopy } from '@/utils/copy';
 import ButtonIcon from '@/components/custom/button-icon.vue';
-import { $t } from '@/locales';
 import DictTag from '@/components/custom/dict-tag.vue';
+import { $t } from '@/locales';
 import DictDataSearch from './modules/dict-data-search.vue';
 import DictDataOperateDrawer from './modules/dict-data-operate-drawer.vue';
 import DictTypeOperateDrawer from './modules/dict-type-operate-drawer.vue';
@@ -28,33 +24,136 @@ defineOptions({
   name: 'DictList'
 });
 
-useDict('sys_user_sex');
-
 const { hasAuth } = useAuth();
 const appStore = useAppStore();
-const { download } = useDownload();
-const route = useRoute();
 
-const selectedKeys = ref<string[]>([]);
-const dictTypeData = ref<Api.System.DictType>();
+// ==================== 字典列表（左侧） ====================
+const selectedDict = ref<Api.System.ContinewDict | null>(null);
+const selectedKeys = ref<CommonType.IdType[]>([]);
+const { loading: treeLoading, startLoading: startTreeLoading, endLoading: endTreeLoading } = useLoading();
+const dictList = ref<Api.System.ContinewDict[]>([]);
+const dictPattern = ref<string>();
+
+async function getDictList() {
+  startTreeLoading();
+  const { data, error } = await fetchGetDictList();
+  if (!error) {
+    dictList.value = data;
+    if (!selectedDict.value && data.length) {
+      handleClickDict([data[0].id]);
+    }
+  }
+  endTreeLoading();
+}
+
+getDictList();
+
+function handleClickDict(keys: CommonType.IdType[]) {
+  const id = keys.length ? keys[0] : null;
+  selectedKeys.value = keys;
+  selectedDict.value = dictList.value.find(item => item.id === id) ?? null;
+  // eslint-disable-next-line @typescript-eslint/no-use-before-define
+  checkedRowKeys.value = [];
+  // eslint-disable-next-line @typescript-eslint/no-use-before-define
+  getDataByPage();
+}
+
+function dictFilter(pattern: string, node: TreeOption) {
+  const name = String(node.name ?? '');
+  const code = String(node.code ?? '');
+  return name.includes(pattern) || code.includes(pattern);
+}
+
+function renderDictSuffix({ option }: { option: TreeOption }) {
+  const dict = dictList.value.find(item => item.id === option.id);
+  if (!dict) return null;
+  return (
+    <div class="flex-center gap-12px">
+      {hasAuth('system:dict:update') && (
+        <ButtonIcon
+          text
+          type="primary"
+          icon="material-symbols:drive-file-rename-outline-outline"
+          tooltipContent={$t('common.edit')}
+          onClick={(event: Event) => {
+            event.stopPropagation();
+            handleEditDict(dict);
+          }}
+        />
+      )}
+      {hasAuth('system:dict:delete') && (
+        <ButtonIcon
+          text
+          type="error"
+          icon="material-symbols:delete-outline"
+          tooltipContent={$t('common.delete')}
+          popconfirmContent="确定删除该字典及其所有字典项吗？"
+          onClick={(event: Event) => event.stopPropagation()}
+          onPositiveClick={() => handleDeleteDict(dict)}
+        />
+      )}
+    </div>
+  );
+}
+
 const dictOperateType = ref<NaiveUI.TableOperateType>('add');
+const dictRowData = ref<Api.System.ContinewDict | null>(null);
 const { bool: dictTypeDrawerVisible, setTrue: openDictTypeDrawer } = useBoolean();
 
-const searchParams = ref<Api.System.DictDataSearchParams>({
-  pageNum: 1,
-  pageSize: 10,
-  dictLabel: null,
-  dictType: null,
-  params: {}
+function handleAddDict() {
+  dictOperateType.value = 'add';
+  dictRowData.value = null;
+  openDictTypeDrawer();
+}
+
+function handleEditDict(dict: Api.System.ContinewDict) {
+  dictRowData.value = dict;
+  dictOperateType.value = 'edit';
+  openDictTypeDrawer();
+}
+
+async function handleDeleteDict(dict: Api.System.ContinewDict) {
+  const { error } = await fetchBatchDeleteDict([dict.id]);
+  if (error) return;
+  window.$message?.success($t('common.deleteSuccess'));
+  selectedDict.value = null;
+  await getDictList();
+}
+
+async function handleClearCache() {
+  if (!selectedDict.value) return;
+  const { error } = await fetchClearDictCache(selectedDict.value.code);
+  if (error) return;
+  window.$message?.success($t('page.system.dict.refreshCacheSuccess'));
+}
+
+async function handleSubmitDict(code: string) {
+  await getDictList();
+  const target = dictList.value.find(item => item.code === code);
+  if (target) {
+    handleClickDict([target.id]);
+  }
+}
+
+// ==================== 字典项分页（右侧） ====================
+const searchParams = ref<Api.System.ContinewDictItemQuery>({
+  page: 1,
+  size: 10,
+  description: null,
+  status: null,
+  dictId: null
 });
 
 const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination, scrollX } =
   useNaivePaginatedTable({
-    api: () => fetchGetDictDataList(searchParams.value),
+    api: () => {
+      searchParams.value.dictId = selectedDict.value?.id ?? null;
+      return fetchGetDictItemList(searchParams.value);
+    },
     transform: response => defaultTransform(response),
     onPaginationParamsChange: params => {
-      searchParams.value.pageNum = params.page;
-      searchParams.value.pageSize = params.pageSize;
+      searchParams.value.page = params.page ?? 1;
+      searchParams.value.size = params.pageSize ?? 10;
     },
     columns: () => [
       {
@@ -63,73 +162,54 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         width: 48
       },
       {
-        key: 'dictLabel',
+        key: 'label',
         title: $t('page.system.dict.data.label'),
         align: 'center',
-        minWidth: 80,
-        resizable: true,
-        ellipsis: {
-          tooltip: true
-        },
+        minWidth: 100,
         render(row) {
-          return <DictTag size="small" dictData={row} />;
+          return <DictTag size="small" dictData={{ label: row.label, value: row.value, extra: row.color }} />;
         }
       },
       {
-        key: 'dictValue',
+        key: 'value',
         title: $t('page.system.dict.data.value'),
         align: 'center',
-        minWidth: 80,
-        resizable: true,
-        ellipsis: {
-          tooltip: true
-        }
+        minWidth: 80
       },
       {
-        key: 'dictSort',
-        title: $t('page.system.dict.data.dictSort'),
+        key: 'status',
+        title: $t('page.system.dict.data.status'),
         align: 'center',
-        minWidth: 80,
-        resizable: true,
-        ellipsis: {
-          tooltip: true
-        }
+        width: 80,
+        render: row => <DictTag dictCode="dis_enable_status" value={row.status} size="small" />
       },
       {
-        key: 'remark',
+        key: 'sort',
+        title: '排序',
+        align: 'center',
+        width: 80
+      },
+      {
+        key: 'description',
         title: $t('page.system.dict.data.remark'),
         align: 'center',
-        minWidth: 80,
-        resizable: true,
-        ellipsis: {
-          tooltip: true
-        }
+        minWidth: 100,
+        ellipsis: { tooltip: true }
       },
       {
         key: 'createTime',
         title: $t('page.system.dict.data.createTime'),
         align: 'center',
-        minWidth: 80,
-        resizable: true,
-        ellipsis: {
-          tooltip: true
-        }
+        minWidth: 120
       },
       {
         key: 'operate',
         title: $t('common.operate'),
         align: 'center',
-        width: 160,
+        width: 120,
         render: row => {
-          const divider = () => {
-            if (!hasAuth('system:dict:edit') || !hasAuth('system:dict:remove')) {
-              return null;
-            }
-            return <NDivider vertical />;
-          };
-
           const editBtn = () => {
-            if (!hasAuth('system:dict:edit')) {
+            if (!hasAuth('system:dict:update')) {
               return null;
             }
             return (
@@ -138,13 +218,14 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
                 type="primary"
                 icon="material-symbols:drive-file-rename-outline-outline"
                 tooltipContent={$t('common.edit')}
-                onClick={() => edit(row.dictCode!)}
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                onClick={() => handleEdit(row.id)}
               />
             );
           };
 
           const deleteBtn = () => {
-            if (!hasAuth('system:dict:remove')) {
+            if (!hasAuth('system:dict:delete')) {
               return null;
             }
             return (
@@ -154,7 +235,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
                 icon="material-symbols:delete-outline"
                 tooltipContent={$t('common.delete')}
                 popconfirmContent={$t('common.confirmDelete')}
-                onPositiveClick={() => handleDelete(row.dictCode!)}
+                onPositiveClick={() => handleDelete(row.id)}
               />
             );
           };
@@ -162,7 +243,6 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
           return (
             <div class="flex-center gap-8px">
               {editBtn()}
-              {divider()}
               {deleteBtn()}
             </div>
           );
@@ -172,174 +252,32 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
   });
 
 const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onBatchDeleted, onDeleted } =
-  useTableOperate(data, 'dictCode', getData);
+  useTableOperate(data, 'id', getData);
 
 async function handleBatchDelete() {
-  // request
-  const { error } = await fetchBatchDeleteDictData(checkedRowKeys.value);
+  const { error } = await fetchBatchDeleteDictItem(checkedRowKeys.value);
   if (error) return;
   onBatchDeleted();
 }
 
-async function handleDelete(dictCode: CommonType.IdType) {
-  // request
-  const { error } = await fetchBatchDeleteDictData([dictCode]);
+async function handleDelete(id: CommonType.IdType) {
+  const { error } = await fetchBatchDeleteDictItem([id]);
   if (error) return;
   onDeleted();
 }
 
-async function edit(dictCode: CommonType.IdType) {
-  handleEdit(dictCode);
-}
-
-async function handleExport() {
-  download('/system/dict/data/export', searchParams.value, `字典数据_${new Date().getTime()}.xlsx`);
-}
-
-async function handleResetSearch() {
-  searchParams.value.dictLabel = null;
-  selectedKeys.value = [];
-  await getDataByPage();
-}
-
-async function handleRefreshCache() {
-  const { error } = await fetchRefreshCache();
-  if (error) return;
-  window.$message?.success($t('page.system.dict.refreshCacheSuccess'));
-  await getData();
-}
-
-const { loading: treeLoading, startLoading: startTreeLoading, endLoading: endTreeLoading } = useLoading();
-const dictPattern = ref<string>();
-const dictData = ref<Api.System.DictType[]>([]);
-
-function dictFilter(pattern: string, node: TreeOption) {
-  const dictName = node.dictName as string;
-  const dictType = node.dictType as string;
-  return dictName.includes(pattern) || dictType.includes(pattern);
-}
-
-async function getTreeData() {
-  startTreeLoading();
-  const { data: tree, error } = await fetchGetDictTypeOption();
-  if (!error) {
-    dictData.value = tree;
-    handleClickTree(route.query.dictType ? [route.query.dictType as string] : []);
-  }
-  endTreeLoading();
-}
-
-getTreeData();
-
-function handleClickTree(keys: string[]) {
-  const dictType = keys.length ? keys[0] : null;
-  selectedKeys.value = keys;
-  searchParams.value.dictType = dictType;
-  window.history.pushState(null, '', `${route.path}${dictType ? `?dictType=${dictType}` : ''}`);
-  checkedRowKeys.value = [];
+function handleResetSearch() {
+  searchParams.value.description = null;
+  searchParams.value.status = null;
   getDataByPage();
 }
 
-function handleResetTreeData() {
-  dictPattern.value = '';
-  getTreeData();
-}
-
-function renderLabel({ option }: { option: TreeOption }) {
-  return (
-    <NTooltip placement="left">
-      {{
-        trigger: () => (
-          <div class="w-200px flex gap-6px overflow-hidden text-ellipsis whitespace-nowrap">
-            <span>{option.dictName}</span>
-            <span class="text-12px text-gray-500">( {option.dictType} )</span>
-          </div>
-        ),
-        default: () => (
-          <div class="flex-col">
-            <span>
-              {option.dictName} {option.dictType}
-            </span>
-            {option.remark ? <span>( {option.remark} )</span> : null}
-            <span>{option.createTime}</span>
-          </div>
-        )
-      }}
-    </NTooltip>
-  );
-}
-
-function renderSuffix({ option }: { option: TreeOption }) {
-  return (
-    <div class="flex-center gap-12px">
-      <ButtonIcon
-        text
-        type="primary"
-        icon="material-symbols:drive-file-rename-outline-outline"
-        tooltip-content={$t('common.edit')}
-        onClick={(event: Event) => {
-          event.stopPropagation();
-          handleEditType(option as Api.System.DictType);
-        }}
-      />
-      <ButtonIcon
-        text
-        type="error"
-        icon="material-symbols:delete-outline"
-        tooltip-content={$t('common.delete')}
-        popconfirm-content={`${$t('page.system.dict.confirmDeleteDictType')} ${option.dictType} ？`}
-        onClick={(event: Event) => event.stopPropagation()}
-        onPositiveClick={() => handleDeleteType(option as Api.System.DictType)}
-      />
-    </div>
-  );
-}
-
-function handleAddType() {
-  dictTypeData.value = undefined;
-  dictOperateType.value = 'add';
-  openDictTypeDrawer();
-}
-
-function handleEditType(dictType: Api.System.DictType) {
-  dictTypeData.value = dictType;
-  dictOperateType.value = 'edit';
-  openDictTypeDrawer();
-}
-
-async function handleDeleteType(dictType: Api.System.DictType) {
-  const { error } = await fetchBatchDeleteDictType([dictType.dictId]);
-  if (error) return;
-  window.$message?.success($t('common.deleteSuccess'));
-  getTreeData();
-}
-
-async function handleExportType() {
-  download(
-    '/system/dict/type/export',
-    searchParams.value,
-    `${$t('page.system.dict.dictType')}_${new Date().getTime()}.xlsx`
-  );
-}
-
-async function handleSubmitType(dictType: string) {
-  await getTreeData();
-  if (!dictType) return;
-  handleClickTree([dictType]);
-}
-
-const selectable = computed(() => {
-  return !loading.value;
-});
-
 const tableTitle = computed(() => {
-  const dictType = dictData.value.find(item => item.dictType === searchParams.value.dictType);
-  return dictType ? (
+  const dict = selectedDict.value;
+  return dict ? (
     <NEllipsis lineClamp={2} class="flex">
-      <span>{dictType.dictName}</span>
-      <span class="cursor-copy" onClick={async () => await handleCopy(dictType.dictType)}>
-        {` (${dictType.dictType} )`}
-      </span>
+      <span>{dict.name}</span>
+      <span>{` (${dict.code} )`}</span>
     </NEllipsis>
   ) : (
     <div>{$t('page.system.dict.title')}</div>
@@ -351,27 +289,28 @@ const tableTitle = computed(() => {
   <TableSiderLayout :sider-title="$t('page.system.dict.dictTypeTitle')">
     <template #header-extra>
       <ButtonIcon
-        v-if="hasAuth('system:dict:add')"
+        v-if="hasAuth('system:dict:create')"
         size="small"
         icon="material-symbols:add-rounded"
         class="h-18px text-icon"
         :tooltip-content="$t('page.system.dict.addDictType')"
-        @click.stop="() => handleAddType()"
+        @click.stop="() => handleAddDict()"
       />
       <ButtonIcon
-        v-if="hasAuth('system:dict:export')"
+        v-if="hasAuth('system:dict:update')"
         size="small"
-        icon="material-symbols:download-rounded"
+        icon="material-symbols:cache-rounded"
         class="h-18px text-icon"
-        :tooltip-content="$t('page.system.dict.exportDictType')"
-        @click.stop="() => handleExportType()"
+        :tooltip-content="$t('page.system.dict.refreshCache')"
+        :disabled="!selectedDict"
+        @click.stop="() => handleClearCache()"
       />
       <ButtonIcon
         size="small"
         icon="material-symbols:refresh-rounded"
         class="h-18px text-icon"
         :tooltip-content="$t('page.system.dict.refreshDictType')"
-        @click.stop="() => handleResetTreeData()"
+        @click.stop="() => getDictList()"
       />
     </template>
     <template #sider>
@@ -381,18 +320,16 @@ const tableTitle = computed(() => {
           v-model:selected-keys="selectedKeys"
           block-node
           show-line
-          :data="dictData as []"
+          :data="(dictList as [])"
           :show-irrelevant-nodes="false"
           :pattern="dictPattern"
           :filter="dictFilter"
           class="infinite-scroll h-full min-h-200px py-3"
-          key-field="dictType"
-          label-field="dictName"
+          key-field="id"
+          label-field="name"
           virtual-scroll
-          :selectable="selectable"
-          :render-label="renderLabel"
-          :render-suffix="renderSuffix"
-          @update:selected-keys="handleClickTree"
+          :render-suffix="renderDictSuffix"
+          @update:selected-keys="handleClickDict"
         >
           <template #empty>
             <NEmpty :description="$t('page.system.dict.dictTypeIsEmpty')" class="h-full min-h-200px justify-center" />
@@ -408,25 +345,14 @@ const tableTitle = computed(() => {
           <TableHeaderOperation
             v-model:columns="columnChecks"
             :disabled-delete="checkedRowKeys.length === 0"
-            :disable-add="!searchParams.dictType"
+            :disable-add="!selectedDict"
             :loading="loading"
-            :show-add="hasAuth('system:user:add')"
-            :show-delete="hasAuth('system:user:remove')"
-            :show-export="hasAuth('system:user:export')"
+            :show-add="hasAuth('system:dict:create')"
+            :show-delete="hasAuth('system:dict:delete')"
             @add="handleAdd"
             @delete="handleBatchDelete"
             @refresh="getData"
-            @export="handleExport"
-          >
-            <template #prefix>
-              <NButton ghost size="small" @click="handleRefreshCache">
-                <template #icon>
-                  <icon-material-symbols-refresh-rounded class="text-icon" />
-                </template>
-                {{ $t('page.system.dict.refreshCache') }}
-              </NButton>
-            </template>
-          </TableHeaderOperation>
+          />
         </template>
         <NDataTable
           v-model:checked-row-keys="checkedRowKeys"
@@ -437,7 +363,7 @@ const tableTitle = computed(() => {
           :scroll-x="scrollX"
           :loading="loading"
           remote
-          :row-key="row => row.dictCode"
+          :row-key="row => row.id"
           :pagination="mobilePagination"
           class="h-full"
         />
@@ -445,14 +371,14 @@ const tableTitle = computed(() => {
           v-model:visible="drawerVisible"
           :operate-type="operateType"
           :row-data="editingData"
-          :dict-type="searchParams.dictType || ''"
+          :dict="selectedDict"
           @submitted="getData"
         />
         <DictTypeOperateDrawer
           v-model:visible="dictTypeDrawerVisible"
           :operate-type="dictOperateType"
-          :row-data="dictTypeData"
-          @submitted="handleSubmitType"
+          :row-data="dictRowData"
+          @submitted="handleSubmitDict"
         />
       </NCard>
     </div>
@@ -505,18 +431,6 @@ const tableTitle = computed(() => {
 :deep(.n-data-table-base-table),
 :deep(.n-data-table-base-table-body) {
   height: 100%;
-}
-
-@media screen and (max-width: 800px) {
-  :deep(.n-data-table-base-table-body) {
-    max-height: calc(100vh - 400px - var(--calc-footer-height, 0px));
-  }
-}
-
-@media screen and (max-width: 802px) {
-  :deep(.n-data-table-base-table-body) {
-    max-height: calc(100vh - 473px - var(--calc-footer-height, 0px));
-  }
 }
 
 :deep(.n-card-header__main) {

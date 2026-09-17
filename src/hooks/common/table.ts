@@ -239,7 +239,7 @@ export function useTableOperate<TableData>(
 }
 
 export function defaultTransform<ApiData>(
-  response: FlatResponseData<any, Api.Common.PaginatingQueryRecord<ApiData>>
+  response: FlatResponseData<any, Api.Common.PaginatingQueryRecord<ApiData> | { list: ApiData[]; total: number }>
 ): PaginationData<ApiData> {
   const { data, error } = response;
 
@@ -251,12 +251,13 @@ export function defaultTransform<ApiData>(
     };
   }
 
-  const { rows: records, pageNum: current, total } = data;
+  const records = 'list' in data ? data.list : data.rows;
+  const pageNum = 'pageNum' in data ? data.pageNum : 1;
 
   return {
     data: records,
-    pageNum: current,
-    total
+    pageNum,
+    total: data.total
   };
 }
 

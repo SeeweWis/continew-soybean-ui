@@ -17,7 +17,7 @@ const emit = defineEmits<Emits>();
 
 const { formRef, validate, restoreValidation } = useNaiveForm();
 
-const model = defineModel<Api.System.DictDataSearchParams>('model', { required: true });
+const model = defineModel<Api.System.ContinewDictItemQuery>('model', { required: true });
 
 const defaultModel = jsonClone(toRaw(model.value));
 
@@ -38,20 +38,23 @@ async function search() {
 </script>
 
 <template>
-  <NCard :bordered="false" size="small" class="card-wrapper">
+  <NCard :bordered="false" class="table-search card-wrapper">
     <NCollapse>
-      <NCollapseItem :title="$t('common.search')" name="user-search">
-        <NForm ref="formRef" :model="model" label-placement="left" :label-width="80">
-          <NGrid responsive="screen" item-responsive>
+      <NCollapseItem :title="$t('common.search')" name="search">
+        <NForm ref="formRef" label-placement="left" :label-width="80" :model="model">
+          <NGrid responsive="screen" cols="1 s:2 m:3" :x-gap="8" :y-gap="8" item-responsive>
             <NFormItemGi
-              span="24 s:12 m:12"
+              span="24 s:12 m:8"
               :label="$t('page.system.dict.data.label')"
-              path="dictLabel"
+              path="description"
               class="pr-24px"
             >
-              <NInput v-model:value="model.dictLabel" :placeholder="$t('page.system.dict.form.dictLabel.required')" />
+              <NInput v-model:value="model.description" :placeholder="$t('page.system.dict.data.label')" />
             </NFormItemGi>
-            <NFormItemGi span="24 s:12 m:12" class="pr-24px">
+            <NFormItemGi span="24 s:12 m:8" :label="$t('page.system.dict.data.status')" path="status" class="pr-24px">
+              <DictSelect v-model:value="model.status" dict-code="dis_enable_status" clearable />
+            </NFormItemGi>
+            <NFormItemGi span="24 s:12 m:8" class="pr-24px">
               <NSpace class="w-full" justify="end">
                 <NButton @click="reset">
                   <template #icon>
@@ -73,5 +76,3 @@ async function search() {
     </NCollapse>
   </NCard>
 </template>
-
-<style scoped></style>

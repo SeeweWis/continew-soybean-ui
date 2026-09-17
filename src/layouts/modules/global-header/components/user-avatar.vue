@@ -92,16 +92,16 @@ function handleDropdown(key: DropdownKey) {
     <div class="flex cursor-pointer items-center rounded-md px-2 py-1 transition-colors duration-300 hover:bg-black/6">
       <div class="flex items-center gap-2" :class="{ 'opacity-50': avatarError }">
         <NAvatar
-          v-if="authStore.userInfo.user?.avatar"
+          v-if="authStore.userInfo.avatar"
           :size="24"
           round
-          :src="authStore.userInfo.user?.avatar"
+          :src="authStore.userInfo.avatar"
           @load="handleAvatarLoad"
           @error="handleAvatarError"
         />
         <NAvatar v-else :size="32" round :src="defaultAvatar" @load="handleAvatarLoad" @error="handleAvatarError" />
         <span class="max-w-120px truncate text-14px font-medium">
-          {{ authStore.userInfo.user?.nickName }}
+          {{ authStore.userInfo.nickname }}
         </span>
       </div>
     </div>

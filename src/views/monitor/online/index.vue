@@ -1,159 +1,162 @@
 <script setup lang="tsx">
 import { ref } from 'vue';
-import dayjs from 'dayjs';
-import { fetchForceLogout, fetchGetOnlineUserList } from '@/service/api/monitor/online';
+import { NTag } from 'naive-ui';
+import { useLoading } from '@sa/hooks';
+import { fetchGetOnlineUserPage, fetchKickoutOnlineUser } from '@/service/api/monitor';
 import { useAppStore } from '@/store/modules/app';
 import { useAuth } from '@/hooks/business/auth';
 import { defaultTransform, useNaivePaginatedTable } from '@/hooks/common/table';
-import { useDict } from '@/hooks/business/dict';
-import { getBrowserIcon, getOsIcon } from '@/utils/icon-tag-format';
-import ButtonIcon from '@/components/custom/button-icon.vue';
-import DictTag from '@/components/custom/dict-tag.vue';
-import SvgIcon from '@/components/custom/svg-icon.vue';
 import { $t } from '@/locales';
-import OnlineSearch from './modules/online-search.vue';
+import ButtonIcon from '@/components/custom/button-icon.vue';
 
 defineOptions({
-  name: 'OnlineList'
+  name: 'OnlineUser'
 });
 
 const appStore = useAppStore();
 const { hasAuth } = useAuth();
+const { startLoading: startKickLoading, endLoading: endKickLoading } = useLoading();
 
-useDict('sys_common_status');
-useDict('sys_device_type');
-
-const searchParams = ref<Api.Monitor.OnlineUserSearchParams>({
-  userName: null,
-  ipaddr: null,
-  params: {}
+const searchParams = ref<Api.Monitor.ContinewOnlineUserQuery>({
+  page: 1,
+  size: 10,
+  nickname: null,
+  clientId: null,
+  loginTime: null
 });
 
-const { columns, columnChecks, data, getData, loading, scrollX } = useNaivePaginatedTable({
-  api: () => fetchGetOnlineUserList(searchParams.value),
-  transform: response => defaultTransform(response),
-  columns: () => [
-    {
-      key: 'userName',
-      title: '用户账号',
-      align: 'center',
-      minWidth: 120
+const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination, scrollX } =
+  useNaivePaginatedTable({
+    api: () => fetchGetOnlineUserPage(searchParams.value),
+    transform: response => defaultTransform(response),
+    onPaginationParamsChange: params => {
+      searchParams.value.page = params.page ?? 1;
+      searchParams.value.size = params.pageSize ?? 10;
     },
-    {
-      key: 'deviceType',
-      title: '设备类型',
-      align: 'center',
-      minWidth: 120,
-      render: row => {
-        return <DictTag size="small" value={row.deviceType} dict-code="sys_device_type" />;
-      }
-    },
-    {
-      key: 'ipaddr',
-      title: '登录IP地址',
-      align: 'center',
-      minWidth: 120
-    },
-    {
-      key: 'loginLocation',
-      title: '登录地点',
-      align: 'center',
-      minWidth: 120
-    },
-    {
-      key: 'browser',
-      title: '浏览器类型',
-      align: 'center',
-      minWidth: 120,
-      render: row => {
-        return (
-          <div class="flex items-center justify-center gap-2">
-            <SvgIcon icon={getBrowserIcon(row.browser)} />
-            {row.browser}
-          </div>
-        );
-      }
-    },
-    {
-      key: 'os',
-      title: '操作系统',
-      align: 'center',
-      ellipsis: {
-        tooltip: true
+    columns: () => [
+      {
+        key: 'nickname',
+        title: '用户昵称',
+        align: 'center',
+        minWidth: 100
       },
-      minWidth: 120,
-      render: row => {
-        const osName = row.os?.split(' or ')[0] ?? '';
-        return (
-          <div class="flex items-center justify-center gap-2">
-            <SvgIcon icon={getOsIcon(osName)} />
-            {osName}
-          </div>
-        );
-      }
-    },
-    {
-      key: 'loginTime',
-      title: '登录时间',
-      align: 'center',
-      ellipsis: {
-        tooltip: true
+      {
+        key: 'username',
+        title: '用户名',
+        align: 'center',
+        minWidth: 100
       },
-      minWidth: 120,
-      render: row => {
-        return dayjs(row.loginTime).format('YYYY-MM-DD HH:mm:ss');
-      }
-    },
-    {
-      key: 'operate',
-      title: $t('common.operate'),
-      align: 'center',
-      width: 130,
-      render: row => {
-        const forceLogoutBtn = () => {
-          if (!hasAuth('monitor:online:forceLogout')) {
-            return null;
-          }
+      {
+        key: 'clientType',
+        title: '终端类型',
+        align: 'center',
+        minWidth: 80,
+        render: row => <NTag type="info">{row.clientType || '-'}</NTag>
+      },
+      {
+        key: 'ip',
+        title: '登录 IP',
+        align: 'center',
+        minWidth: 120
+      },
+      {
+        key: 'address',
+        title: '登录地点',
+        align: 'center',
+        minWidth: 120
+      },
+      {
+        key: 'browser',
+        title: '浏览器',
+        align: 'center',
+        minWidth: 100
+      },
+      {
+        key: 'os',
+        title: '操作系统',
+        align: 'center',
+        minWidth: 100
+      },
+      {
+        key: 'loginTime',
+        title: '登录时间',
+        align: 'center',
+        minWidth: 160
+      },
+      {
+        key: 'operate',
+        title: $t('common.operate'),
+        align: 'center',
+        width: 100,
+        render: row => {
+          if (!hasAuth('monitor:online:kickout')) return null;
           return (
-            <ButtonIcon
-              text
-              type="error"
-              icon="material-symbols:delete-outline"
-              class="text-20px"
-              tooltipContent="强制下线"
-              popconfirmContent="确认强制下线吗？"
-              onPositiveClick={() => handleForceLogout(row.tokenId)}
-            />
+            <div class="flex-center gap-8px">
+              <ButtonIcon
+                text
+                type="error"
+                icon="material-symbols:logout-rounded"
+                tooltipContent="强退"
+                popconfirmContent="确定要强制该用户下线吗？"
+                onPositiveClick={() => handleKickout(row.token)}
+              />
+            </div>
           );
-        };
-        return <div>{forceLogoutBtn()}</div>;
+        }
       }
-    }
-  ]
-});
+    ]
+  });
 
-async function handleForceLogout(tokenId: string) {
-  // request
-  const { error } = await fetchForceLogout(tokenId);
+async function handleKickout(token: string) {
+  startKickLoading();
+  const { error } = await fetchKickoutOnlineUser(token);
+  endKickLoading();
   if (error) return;
-  getData();
+  window.$message?.success('强退成功');
+  await getData();
+}
+
+function handleResetSearch() {
+  searchParams.value.nickname = null;
+  searchParams.value.clientId = null;
+  getDataByPage();
 }
 </script>
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <OnlineSearch v-model:model="searchParams" @search="getData" />
-    <NCard title="在线用户列表" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
-      <template #header-extra>
+    <NCard :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
+      <div class="mb-12px flex flex-wrap items-center justify-between gap-12px">
+        <NSpace>
+          <NInput
+            v-model:value="searchParams.nickname"
+            clearable
+            class="w-240px"
+            placeholder="搜索用户名/昵称"
+            @keyup.enter="() => getDataByPage()"
+          >
+            <template #prefix><SvgIcon icon="material-symbols:search-rounded" /></template>
+          </NInput>
+          <NInput
+            v-model:value="searchParams.clientId"
+            clearable
+            class="w-180px"
+            placeholder="客户端 ID"
+            @keyup.enter="() => getDataByPage()"
+          />
+          <NButton size="small" @click="handleResetSearch">
+            <template #icon><icon-ic-round-refresh class="text-icon" /></template>
+            重置
+          </NButton>
+        </NSpace>
         <TableHeaderOperation
           v-model:columns="columnChecks"
           :loading="loading"
           :show-add="false"
           :show-delete="false"
-          :show-export="false"
           @refresh="getData"
         />
-      </template>
+      </div>
       <NDataTable
         :columns="columns"
         :data="data"
@@ -162,7 +165,8 @@ async function handleForceLogout(tokenId: string) {
         :scroll-x="scrollX"
         :loading="loading"
         remote
-        :row-key="row => row.tokenId"
+        :row-key="row => row.id"
+        :pagination="mobilePagination"
         class="sm:h-full"
       />
     </NCard>

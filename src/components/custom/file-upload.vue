@@ -2,7 +2,7 @@
 import { computed, defineComponent } from 'vue';
 import type { UploadFileInfo } from 'naive-ui';
 import type { JSX } from 'vue/jsx-runtime';
-import { fetchBatchDeleteOss } from '@/service/api/system/oss';
+import { fetchBatchDeleteFile } from '@/service/api/system';
 import { getToken } from '@/store/modules/auth/shared';
 import { getServiceBaseURL } from '@/utils/service';
 import { AcceptType } from '@/enum/business';
@@ -24,7 +24,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  action: `/resource/oss/upload`,
+  action: `/system/file/upload`,
   data: undefined,
   defaultUpload: true,
   showTip: true,
@@ -97,8 +97,7 @@ const isHttpProxy = import.meta.env.DEV && import.meta.env.VITE_HTTP_PROXY === '
 const { baseURL } = getServiceBaseURL(import.meta.env, isHttpProxy);
 
 const headers: Record<string, string> = {
-  Authorization: `Bearer ${getToken()}`,
-  clientid: import.meta.env.VITE_APP_CLIENT_ID!
+  Authorization: `Bearer ${getToken()}`
 };
 
 function beforeUpload(options: { file: UploadFileInfo; fileList: UploadFileInfo[] }) {
@@ -134,7 +133,7 @@ function beforeUpload(options: { file: UploadFileInfo; fileList: UploadFileInfo[
 function isErrorState(xhr: XMLHttpRequest) {
   const responseText = xhr?.responseText;
   const response = JSON.parse(responseText);
-  return response.code !== 200;
+  return String(response.code) !== '0';
 }
 
 function handleFinish(options: { file: UploadFileInfo; event?: ProgressEvent }) {
@@ -143,11 +142,10 @@ function handleFinish(options: { file: UploadFileInfo; event?: ProgressEvent }) 
   // @ts-expect-error Ignore type errors
   const responseText = event?.target?.responseText;
   const response = JSON.parse(responseText);
-  const oss: Api.System.Oss = response.data;
-  fileList.value.find(item => item.id === file.id)!.id = String(oss.ossId);
-  file.id = String(oss.ossId);
-  file.url = oss.url;
-  file.name = oss.fileName;
+  const uploaded: Api.System.ContinewFileUploadResp = response.data;
+  fileList.value.find(item => item.id === file.id)!.id = String(uploaded.id);
+  file.id = String(uploaded.id);
+  file.url = uploaded.url;
   if (fileNum === 0) {
     window.$message?.success('上传成功');
   }
@@ -166,7 +164,7 @@ async function handleRemove(file: UploadFileInfo) {
   if (file.status !== 'finished') {
     return false;
   }
-  const { error } = await fetchBatchDeleteOss([file.id]);
+  const { error } = await fetchBatchDeleteFile([file.id]);
   if (error) return false;
   window.$message?.success('删除成功');
   return true;

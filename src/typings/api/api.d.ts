@@ -71,18 +71,22 @@ declare namespace Api {
       tenantId: string;
     } & CommonRecord<T>;
 
-    /** common tree record */
+    /** common tree record（后端 TreeLong） */
     type CommonTreeRecord = {
       /** record id */
       id: CommonType.IdType;
       /** record parent id */
       parentId: CommonType.IdType;
-      /** record label */
-      label: string;
+      /** record name */
+      name: string;
+      /** config */
+      config?: string;
       /** record weight */
-      weight: number;
+      weight?: number;
+      /** empty */
+      empty?: boolean;
       /** record children */
-      children: CommonTreeRecord[];
+      children?: CommonTreeRecord[];
     }[];
   }
 }

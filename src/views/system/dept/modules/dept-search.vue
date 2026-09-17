@@ -17,7 +17,7 @@ const emit = defineEmits<Emits>();
 
 const { formRef, validate, restoreValidation } = useNaiveForm();
 
-const { options: sysNormalDisableOptions } = useDict('sys_normal_disable', false);
+const { options: sysNormalDisableOptions } = useDict('dis_enable_status', false);
 
 const model = defineModel<Api.System.DeptSearchParams>('model', { required: true });
 
@@ -40,7 +40,7 @@ async function search() {
 </script>
 
 <template>
-  <NCard :bordered="false" size="small" class="card-wrapper">
+  <NCard :bordered="false" size="small" class="table-search card-wrapper">
     <NCollapse>
       <NCollapseItem :title="$t('common.search')" name="user-search">
         <NForm ref="formRef" :model="model" label-placement="left" :label-width="80">

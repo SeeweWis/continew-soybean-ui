@@ -1,16 +1,16 @@
 import { request } from '@/service/request';
 
-/** 获取客户端列表 */
-export function fetchGetClientList(params?: Api.System.ClientSearchParams) {
-  return request<Api.System.ClientList>({
-    url: '/system/client/list',
+/** 获取客户端分页列表 */
+export function fetchGetClientPage(params: Api.System.ContinewClientQuery) {
+  return request<Api.System.ContinewClientPage>({
+    url: '/system/client',
     method: 'get',
     params
   });
 }
 
 /** 新增客户端 */
-export function fetchCreateClient(data: Api.System.ClientOperateParams) {
+export function fetchCreateClient(data: Api.System.ContinewClientReq) {
   return request<boolean>({
     url: '/system/client',
     method: 'post',
@@ -19,9 +19,9 @@ export function fetchCreateClient(data: Api.System.ClientOperateParams) {
 }
 
 /** 修改客户端 */
-export function fetchUpdateClient(data: Api.System.ClientOperateParams) {
+export function fetchUpdateClient(id: CommonType.IdType, data: Api.System.ContinewClientReq) {
   return request<boolean>({
-    url: '/system/client',
+    url: `/system/client/${id}`,
     method: 'put',
     data
   });
@@ -30,16 +30,8 @@ export function fetchUpdateClient(data: Api.System.ClientOperateParams) {
 /** 批量删除客户端 */
 export function fetchBatchDeleteClient(ids: CommonType.IdType[]) {
   return request<boolean>({
-    url: `/system/client/${ids.join(',')}`,
-    method: 'delete'
-  });
-}
-
-/** 修改客户端状态 */
-export function fetchUpdateClientStatus(data: Api.System.ClientOperateParams) {
-  return request<boolean>({
-    url: '/system/client/changeStatus',
-    method: 'put',
-    data
+    url: '/system/client',
+    method: 'delete',
+    data: { ids }
   });
 }

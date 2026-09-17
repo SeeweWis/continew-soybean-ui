@@ -2,6 +2,7 @@
 import { toRaw } from 'vue';
 import { jsonClone } from '@sa/utils';
 import { useNaiveForm } from '@/hooks/common/form';
+import { useDict } from '@/hooks/business/dict';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -14,9 +15,11 @@ interface Emits {
 
 const emit = defineEmits<Emits>();
 
+useDict('notice_type');
+
 const { formRef, validate, restoreValidation } = useNaiveForm();
 
-const model = defineModel<Api.System.NoticeSearchParams>('model', { required: true });
+const model = defineModel<Api.System.ContinewNoticeQuery>('model', { required: true });
 
 const defaultModel = jsonClone(toRaw(model.value));
 
@@ -37,16 +40,16 @@ async function search() {
 </script>
 
 <template>
-  <NCard :bordered="false" size="small" class="card-wrapper">
+  <NCard :bordered="false" size="small" class="table-search card-wrapper">
     <NCollapse>
-      <NCollapseItem :title="$t('common.search')" name="user-search">
+      <NCollapseItem :title="$t('common.search')" name="search">
         <NForm ref="formRef" :model="model" label-placement="left" :label-width="80">
-          <NGrid responsive="screen" item-responsive>
-            <NFormItemGi span="24 s:12 m:8" label="公告标题" path="noticeTitle" class="pr-24px">
-              <NInput v-model:value="model.noticeTitle" placeholder="请输入公告标题" />
+          <NGrid responsive="screen" cols="1 s:2 m:3" :x-gap="8" :y-gap="8" item-responsive>
+            <NFormItemGi span="24 s:12 m:8" label="公告标题" path="title" class="pr-24px">
+              <NInput v-model:value="model.title" placeholder="请输入公告标题" @keyup.enter="search" />
             </NFormItemGi>
-            <NFormItemGi span="24 s:12 m:8" label="公告类型" path="noticeType" class="pr-24px">
-              <DictSelect v-model:value="model.noticeType" dict-code="sys_notice_type" placeholder="请选择公告类型" />
+            <NFormItemGi span="24 s:12 m:8" label="公告类型" path="type" class="pr-24px">
+              <DictSelect v-model:value="model.type" dict-code="notice_type" clearable />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:8" class="pr-24px">
               <NSpace class="w-full" justify="end">

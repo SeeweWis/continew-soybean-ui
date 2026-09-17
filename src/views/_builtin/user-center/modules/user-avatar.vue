@@ -30,7 +30,7 @@ const { bool: showModal, setTrue: showDrawer, setFalse: hideDrawer } = useBoolea
 // 使用 useLoading 管理加载状态
 const { loading, startLoading, endLoading } = useLoading();
 
-const imageUrl = ref(authStore.userInfo.user?.avatar || defaultAvatar);
+const imageUrl = ref(authStore.userInfo.avatar || defaultAvatar);
 const cropperRef = ref<CropperRef | null>(null);
 
 // 图片裁剪数据
@@ -87,7 +87,7 @@ async function handleCrop() {
       if (!error) {
         window.$message?.success('头像更新成功！');
         imageUrl.value = URL.createObjectURL(blob);
-        authStore.userInfo.user!.avatar = imageUrl.value;
+        authStore.userInfo.avatar = imageUrl.value;
         hideDrawer();
       }
     }, 'image/png');

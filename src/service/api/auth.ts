@@ -11,7 +11,7 @@ export function fetchTenantList() {
 /** Get image code */
 export function fetchCaptchaCode() {
   return request<Api.Auth.CaptchaCode>({
-    url: '/auth/code',
+    url: '/captcha/image',
     method: 'get'
   });
 }
@@ -22,36 +22,12 @@ export function fetchCaptchaCode() {
  * @param username User name
  * @param password Password
  */
-export function fetchLogin(data: Api.Auth.PwdLoginForm) {
+export function fetchLogin(data: Api.Auth.LoginForm) {
   return request<Api.Auth.LoginToken>({
     url: '/auth/login',
     method: 'post',
     headers: {
       isToken: false,
-      isEncrypt: true,
-      repeatSubmit: false
-    },
-    data
-  });
-}
-
-/** social login callback */
-export function fetchSocialLoginCallback(data: Api.Auth.SocialLoginForm) {
-  return request({
-    url: '/auth/social/callback',
-    method: 'post',
-    data
-  });
-}
-
-/** Register */
-export function fetchRegister(data: Api.Auth.RegisterForm) {
-  return request<Api.Auth.LoginToken>({
-    url: '/auth/register',
-    method: 'post',
-    headers: {
-      isToken: false,
-      isEncrypt: true,
       repeatSubmit: false
     },
     data
@@ -60,7 +36,7 @@ export function fetchRegister(data: Api.Auth.RegisterForm) {
 
 /** Get user info */
 export function fetchGetUserInfo() {
-  return request<Api.Auth.UserInfo>({ url: '/system/user/getInfo' });
+  return request<Api.Auth.UserInfo>({ url: '/auth/user/info' });
 }
 
 /** Logout */

@@ -2,7 +2,7 @@
 import { onMounted, ref, watch } from 'vue';
 import type { TreeSelectInst } from 'naive-ui';
 import { useBoolean } from '@sa/hooks';
-import { fetchGetDeptTree } from '@/service/api/system/user';
+import { fetchGetDeptTree } from '@/service/api/system';
 
 defineOptions({
   name: 'DeptTree',
@@ -119,7 +119,7 @@ defineExpose({
         checkable
         :selectable="false"
         key-field="id"
-        label-field="label"
+        label-field="name"
         :data="options"
         :cascade="cascade"
         :loading="loading"

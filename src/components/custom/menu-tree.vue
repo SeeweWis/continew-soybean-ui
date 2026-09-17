@@ -1,10 +1,9 @@
 <script setup lang="tsx">
 import { onMounted, ref, watch } from 'vue';
-import type { TreeOption, TreeSelectInst } from 'naive-ui';
+import type { TreeOption, TreeInst } from 'naive-ui';
 import { useBoolean } from '@sa/hooks';
-import { fetchGetMenuTreeSelect } from '@/service/api/system';
+import { fetchGetMenuTree } from '@/service/api/system';
 import SvgIcon from '@/components/custom/svg-icon.vue';
-import { $t } from '@/locales';
 
 defineOptions({
   name: 'MenuTree',
@@ -26,24 +25,29 @@ const { bool: expandAll } = useBoolean();
 const { bool: checkAll } = useBoolean();
 const expandedKeys = ref<CommonType.IdType[]>([0]);
 
-const menuTreeRef = ref<TreeSelectInst | null>(null);
+const menuTreeRef = ref<TreeInst | null>(null);
 const checkedKeys = defineModel<CommonType.IdType[]>('checkedKeys', { required: false, default: [] });
-const options = defineModel<Api.System.MenuList>('options', { required: false, default: [] });
+const options = defineModel<Api.System.ContinewMenu[]>('options', { required: false, default: [] });
 const cascade = defineModel<boolean>('cascade', { required: false, default: true });
 const loading = defineModel<boolean>('loading', { required: false, default: false });
 
 async function getMenuList() {
   loading.value = true;
-  const { error, data } = await fetchGetMenuTreeSelect();
-  if (error) return;
+  const { error, data } = await fetchGetMenuTree();
+  if (error) {
+    loading.value = false;
+    return;
+  }
   options.value = [
     {
       id: 0,
-      label: '根目录',
-      icon: 'material-symbols:home-outline-rounded',
+      title: '根目录',
+      parentId: 0,
+      type: 1,
+      status: 1,
       children: data
     }
-  ] as Api.System.MenuList;
+  ];
   // 折叠到只显示根节点
   loading.value = false;
 }
@@ -64,33 +68,11 @@ watch([expandAll, options], ([newVal]) => {
 });
 
 function renderLabel({ option }: { option: TreeOption }) {
-  let label = option.label;
-  if (label?.startsWith('route.') || label?.startsWith('menu.')) {
-    label = $t(label as App.I18n.I18nKey);
-  }
-  // 禁用的菜单显示红色
-  if (option.status === '1') {
-    return (
-      <div class="flex items-center gap-4px text-error-200">
-        {label}
-        <SvgIcon icon="ri:prohibited-line" class="text-16px" />
-      </div>
-    );
-  }
-  // 隐藏的菜单显示灰色
-  if (option.visible === '1') {
-    return (
-      <div class="flex items-center gap-4px text-gray-400">
-        {label}
-        <SvgIcon icon="codex:hidden" class="text-21px" />
-      </div>
-    );
-  }
-  return <div>{label}</div>;
+  return <div>{String(option.title)}</div>;
 }
 
 function renderPrefix({ option }: { option: TreeOption }) {
-  const renderLocalIcon = String(option.icon).startsWith('local-icon-');
+  const renderLocalIcon = String(option.icon ?? '').startsWith('local-icon-');
   let icon = renderLocalIcon ? undefined : String(option.icon ?? 'material-symbols:buttons-alt-outline-rounded');
   const localIcon = renderLocalIcon ? String(option.icon).replace('local-icon-', 'menu-') : undefined;
   if (icon === '#') {
@@ -99,10 +81,10 @@ function renderPrefix({ option }: { option: TreeOption }) {
   return <SvgIcon icon={icon} localIcon={localIcon} />;
 }
 
-function getAllMenuIds(menu: Api.System.MenuList) {
+function getAllMenuIds(menu: Api.System.ContinewMenu[]) {
   const menuIds: CommonType.IdType[] = [];
   menu.forEach(item => {
-    menuIds.push(item.id!);
+    menuIds.push(item.id);
     if (item.children) {
       menuIds.push(...getAllMenuIds(item.children));
     }
@@ -111,12 +93,12 @@ function getAllMenuIds(menu: Api.System.MenuList) {
 }
 
 /** 获取所有叶子节点的 ID（没有子节点的节点） */
-function getLeafMenuIds(menu: Api.System.MenuList): CommonType.IdType[] {
+function getLeafMenuIds(menu: Api.System.ContinewMenu[]): CommonType.IdType[] {
   const leafIds: CommonType.IdType[] = [];
   menu.forEach(item => {
     if (!item.children || item.children.length === 0) {
       // 是叶子节点
-      leafIds.push(item.id!);
+      leafIds.push(item.id);
     } else {
       // 有子节点，递归获取子节点中的叶子节点
       leafIds.push(...getLeafMenuIds(item.children));
@@ -186,8 +168,8 @@ defineExpose({
         checkable
         :selectable="false"
         key-field="id"
-        label-field="label"
-        :data="options"
+        label-field="title"
+        :data="(options as unknown as TreeOption[])"
         :cascade="cascade"
         :loading="loading"
         virtual-scroll

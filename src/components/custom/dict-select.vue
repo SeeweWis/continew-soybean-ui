@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
   multiple: false
 });
 
-const value = defineModel<string | string[] | null>('value', { required: false });
+const value = defineModel<string | number | Array<string | number> | null>('value', { required: false });
 
 const { options } = useDict(props.dictCode, props.immediate);
 </script>

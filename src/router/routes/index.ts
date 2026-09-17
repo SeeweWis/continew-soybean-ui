@@ -1,4 +1,4 @@
-import type { CustomRoute, ElegantConstRoute, ElegantRoute } from '@elegant-router/types';
+import type { CustomRoute, ElegantConstRoute, ElegantRoute, RouteKey } from '@elegant-router/types';
 import { generatedRoutes } from '../elegant/routes';
 import { layouts, views } from '../elegant/imports';
 import { transformElegantRoutesToVueRoutes } from '../elegant/transform';
@@ -144,6 +144,74 @@ export function createDynamicRoutes() {
     constantRoutes,
     authRoutes
   };
+}
+
+const layoutRouteKeys = new Set<RouteKey>([
+  'monitor',
+  'open',
+  'schedule',
+  'system',
+  'tenant',
+  'tool',
+  'code'
+] as RouteKey[]);
+
+/** Transform ContiNew server routes into routes supported by the current elegant-router setup. */
+export function createServerDynamicRoutes(routes: Api.Auth.Route[]) {
+  return routes.flatMap(transformServerDynamicRoute);
+}
+
+function transformServerDynamicRoute(route: Api.Auth.Route): ElegantConstRoute[] {
+  if (route.type === 3) {
+    return [];
+  }
+
+  const meta = {
+    title: route.title,
+    icon: route.icon,
+    order: route.sort,
+    hideInMenu: route.isHidden,
+    keepAlive: route.isCache
+  };
+
+  if (route.component === 'Layout') {
+    const name = route.path.replace(/^\//, '').replaceAll('/', '_') as RouteKey;
+    const children = route.children?.flatMap(transformServerDynamicRoute);
+    if (!layoutRouteKeys.has(name) || !children?.length) {
+      return [];
+    }
+
+    return [
+      {
+        name,
+        path: route.path,
+        component: 'layout.base',
+        redirect: route.redirect,
+        meta,
+        children
+      }
+    ];
+  }
+
+  const viewName = route.component
+    ?.replace(/^\//, '')
+    .replace(/\/index$/, '')
+    .replaceAll('/', '_');
+  if (!viewName || !(viewName in views)) {
+    return [];
+  }
+
+  // 子菜单平铺为同级路由：后端路径均为绝对路径，且 elegant 转换器会给
+  // 带 children 的视图路由自动加 redirect 到第一个子路由，导致点击
+  // 父菜单（如通知公告）跳到隐藏子页（如查看公告）
+  const self: ElegantConstRoute = {
+    name: viewName as RouteKey,
+    path: route.path,
+    component: `view.${viewName}`,
+    redirect: route.redirect,
+    meta
+  };
+  return [self, ...(route.children?.flatMap(transformServerDynamicRoute) ?? [])];
 }
 
 /**

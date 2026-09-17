@@ -1,23 +1,16 @@
 import { request } from '@/service/request';
 
-/** 获取部门列表 */
-export function fetchGetDeptList(params?: Api.System.DeptSearchParams) {
-  return request<Api.System.Dept[]>({
-    url: '/system/dept/list',
+/** 获取部门树 */
+export function fetchGetDeptTree(params?: Api.System.ContinewDeptQuery) {
+  return request<Api.Common.CommonTreeRecord>({
+    url: '/system/dept/tree',
     method: 'get',
     params
   });
 }
-/** 获取排除部门列表 */
-export function fetchGetExcludeDeptList(deptId?: CommonType.IdType) {
-  return request<Api.System.Dept[]>({
-    url: `/system/dept/list/exclude/${deptId}`,
-    method: 'get'
-  });
-}
 
 /** 新增部门 */
-export function fetchCreateDept(data: Api.System.DeptOperateParams) {
+export function fetchCreateDept(data: Api.System.ContinewDeptReq) {
   return request<boolean>({
     url: '/system/dept',
     method: 'post',
@@ -26,26 +19,19 @@ export function fetchCreateDept(data: Api.System.DeptOperateParams) {
 }
 
 /** 修改部门 */
-export function fetchUpdateDept(data: Api.System.DeptOperateParams) {
+export function fetchUpdateDept(id: CommonType.IdType, data: Api.System.ContinewDeptReq) {
   return request<boolean>({
-    url: '/system/dept',
+    url: `/system/dept/${id}`,
     method: 'put',
     data
   });
 }
 
 /** 批量删除部门 */
-export function fetchBatchDeleteDept(deptIds: CommonType.IdType[]) {
+export function fetchBatchDeleteDept(ids: CommonType.IdType[]) {
   return request<boolean>({
-    url: `/system/dept/${deptIds.join(',')}`,
-    method: 'delete'
-  });
-}
-
-/** 获取部门选择框列表 */
-export function fetchGetDeptSelect() {
-  return request<Api.System.Dept[]>({
-    url: '/system/dept/optionselect',
-    method: 'get'
+    url: '/system/dept',
+    method: 'delete',
+    data: { ids }
   });
 }

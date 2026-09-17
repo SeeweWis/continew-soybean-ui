@@ -1,21 +1,15 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import { $t } from '@/locales';
 import { SetupStoreId } from '@/enum';
 
 export const useDictStore = defineStore(SetupStoreId.Dict, () => {
-  const dictData = ref<{ [key: string]: Api.System.DictData[] }>({});
+  const dictData = ref<{ [key: string]: Api.System.LabelValue[] }>({});
 
   const getDict = (key: string) => {
-    return dictData.value[key]?.map(item => ({
-      ...item,
-      dictLabel: item.dictLabel?.startsWith(`dict.${item.dictType}.`)
-        ? $t(item.dictLabel as App.I18n.I18nKey)
-        : item.dictLabel
-    }));
+    return dictData.value[key];
   };
 
-  const setDict = (key: string, dict: Api.System.DictData[]) => {
+  const setDict = (key: string, dict: Api.System.LabelValue[]) => {
     dictData.value[key] = dict;
   };
 

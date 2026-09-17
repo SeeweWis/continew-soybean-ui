@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useLoading } from '@sa/hooks';
-import { fetchGetUserSelect } from '@/service/api/system';
+import { fetchGetUserDict } from '@/service/api/system';
 
 defineOptions({
   name: 'UserSelect',
@@ -18,17 +18,17 @@ const value = defineModel<CommonType.IdType | null>('value', { required: false }
 
 const { loading: userLoading, startLoading: startUserLoading, endLoading: endUserLoading } = useLoading();
 
-/** the enabled role options */
-const userOptions = ref<CommonType.Option<CommonType.IdType>[]>([]);
+/** the user options */
+const userOptions = ref<{ label: string; value: CommonType.IdType }[]>([]);
 
 async function getUserOptions() {
   startUserLoading();
-  const { error, data } = await fetchGetUserSelect();
+  const { error, data } = await fetchGetUserDict();
 
   if (!error) {
     userOptions.value = data.map(item => ({
-      label: `${item.nickName} ( ${item.userName} )`,
-      value: item.userId
+      label: item.label,
+      value: item.value as CommonType.IdType
     }));
   }
   endUserLoading();
