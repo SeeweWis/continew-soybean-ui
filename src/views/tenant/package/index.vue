@@ -65,7 +65,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         title: '状态',
         align: 'center',
         width: 80,
-        render: row => <DictTag dictCode="dis_enable_status" value={row.status} size="small" />
+        render: row => <DictTag dictCode="dis_enable_status_enum" value={row.status} size="small" />
       },
       {
         key: 'createTime',
@@ -164,14 +164,11 @@ function handleResetSearch() {
           >
             <template #prefix><SvgIcon icon="material-symbols:search-rounded" /></template>
           </NInput>
-          <NSelect
+          <DictSelect
             v-model:value="searchParams.status"
             clearable
             class="w-160px"
-            :options="[
-              { label: '启用', value: 1 },
-              { label: '禁用', value: 2 }
-            ]"
+            dict-code="dis_enable_status_enum"
             placeholder="请选择状态"
             @update:value="() => getDataByPage()"
           />

@@ -1,12 +1,12 @@
 <script setup lang="tsx">
 import { reactive, ref } from 'vue';
-import { NTag } from 'naive-ui';
 import { fetchGetLogDetail, fetchGetLogPage } from '@/service/api/monitor';
 import { useAppStore } from '@/store/modules/app';
 import { useAuth } from '@/hooks/business/auth';
 import { defaultTransform, useNaivePaginatedTable } from '@/hooks/common/table';
 import { $t } from '@/locales';
 import ButtonIcon from '@/components/custom/button-icon.vue';
+import DictTag from '@/components/custom/dict-tag.vue';
 
 defineOptions({
   name: 'Log'
@@ -25,15 +25,6 @@ const searchParams = reactive<Api.Monitor.ContinewLogQuery>({
   createTime: null,
   status: null
 });
-
-const statusTagMap: Record<number, 'success' | 'error'> = {
-  1: 'success',
-  2: 'error'
-};
-const statusTextMap: Record<number, string> = {
-  1: '成功',
-  2: '失败'
-};
 
 const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination, scrollX } =
   useNaivePaginatedTable({
@@ -67,12 +58,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         title: '操作状态',
         align: 'center',
         width: 90,
-        render: row =>
-          row.status ? (
-            <NTag type={statusTagMap[row.status]} size="small">
-              {statusTextMap[row.status]}
-            </NTag>
-          ) : null
+        render: row => <DictTag dictCode="log_status_enum" value={row.status} size="small" />
       },
       {
         key: 'timeTaken',
@@ -173,12 +159,9 @@ function handleResetSearch() {
                 <NInput v-model:value="searchParams.ip" placeholder="请输入操作 IP" />
               </NFormItemGi>
               <NFormItemGi span="24 s:12 m:8" label="操作状态" class="pr-24px">
-                <NSelect
+                <DictSelect
                   v-model:value="searchParams.status"
-                  :options="[
-                    { label: '成功', value: 1 },
-                    { label: '失败', value: 2 }
-                  ]"
+                  dict-code="log_status_enum"
                   clearable
                 />
               </NFormItemGi>
@@ -239,9 +222,7 @@ function handleResetSearch() {
           <NDescriptionsItem label="日志描述">{{ detail.description }}</NDescriptionsItem>
           <NDescriptionsItem label="所属模块">{{ detail.module }}</NDescriptionsItem>
           <NDescriptionsItem label="操作状态">
-            <NTag v-if="detail.status" :type="statusTagMap[detail.status]" size="small">
-              {{ statusTextMap[detail.status] }}
-            </NTag>
+            <DictTag dict-code="log_status_enum" :value="detail.status" size="small" />
           </NDescriptionsItem>
           <NDescriptionsItem label="耗时">{{ detail.timeTaken }} ms</NDescriptionsItem>
           <NDescriptionsItem label="请求 URL">{{ detail.requestUrl }}</NDescriptionsItem>

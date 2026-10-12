@@ -70,8 +70,8 @@ handleFetchCaptchaCode();
 
 <template>
   <div>
-    <div class="mb-5px text-32px text-black font-600 sm:text-30px dark:text-white">注册新账户</div>
-    <div class="pb-18px text-16px text-#858585">欢迎注册！请输入您的账户信息</div>
+    <div class="mb-5px text-32px font-600 sm:text-30px text-[var(--login-text-primary)]">注册新账户</div>
+    <div class="pb-18px text-16px text-[var(--login-text-secondary)]">欢迎注册！请输入您的账户信息</div>
     <NForm ref="formRef" :model="model" :rules="rules" size="large" :show-label="false" @keyup.enter="handleSubmit">
       <NFormItem path="username">
         <NInput v-model:value="model.username" :placeholder="$t('page.login.common.userNamePlaceholder')" />
@@ -110,7 +110,7 @@ handleFetchCaptchaCode();
       </NSpace>
     </NForm>
 
-    <div class="mt-24px w-full text-center text-18px text-#858585">
+    <div class="mt-24px w-full text-center text-18px text-[var(--login-text-secondary)]">
       您已有账户？
       <NA type="primary" class="text-18px" @click="toggleLoginModule('pwd-login')">
         {{ $t('common.login') }}
@@ -123,7 +123,7 @@ handleFetchCaptchaCode();
 .login-code {
   &.n-button {
     --n-padding: 0 8px !important;
-    background-color: #c0c0c0;
+    background-color: var(--login-code-background, #c0c0c0);
   }
 
   img {

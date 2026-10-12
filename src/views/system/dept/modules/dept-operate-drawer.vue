@@ -135,7 +135,7 @@ watch(visible, () => {
             <NInputNumber v-model:value="model.sort" class="w-full" placeholder="请输入排序" />
           </NFormItem>
           <NFormItem label="状态" path="status">
-            <DictRadio v-model:value="model.status" dict-code="dis_enable_status" />
+            <DictSelect v-model:value="model.status" dict-code="dis_enable_status_enum" />
           </NFormItem>
           <NFormItem label="描述" path="description">
             <NInput v-model:value="model.description" type="textarea" placeholder="请输入描述" />

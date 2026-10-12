@@ -45,6 +45,15 @@ function handleBack() {
             <DictTag v-if="notice.type" dict-code="notice_type" :value="notice.type" />
           </NDescriptionsItem>
           <NDescriptionsItem label="发布时间">{{ notice.publishTime || notice.createTime }}</NDescriptionsItem>
+          <NDescriptionsItem label="发布状态">
+            <DictTag dict-code="notice_status_enum" :value="notice.status" />
+          </NDescriptionsItem>
+          <NDescriptionsItem label="通知范围">
+            <DictTag dict-code="notice_scope_enum" :value="notice.noticeScope" />
+          </NDescriptionsItem>
+          <NDescriptionsItem label="通知方式">
+            <DictTag dict-code="notice_method_enum" :value="notice.noticeMethods" />
+          </NDescriptionsItem>
           <NDescriptionsItem label="创建人">{{ notice.createUserString }}</NDescriptionsItem>
           <NDescriptionsItem label="创建时间">{{ notice.createTime }}</NDescriptionsItem>
         </NDescriptions>

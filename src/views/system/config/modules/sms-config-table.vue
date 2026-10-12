@@ -86,7 +86,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         title: '状态',
         align: 'center',
         width: 80,
-        render: row => <DictTag dictCode="dis_enable_status" value={row.status} size="small" />
+        render: row => <DictTag dictCode="dis_enable_status_enum" value={row.status} size="small" />
       },
       {
         key: 'operate',
@@ -249,7 +249,7 @@ function handleResetSearch() {
                 <DictSelect v-model:value="searchParams.supplier" dict-code="sms_supplier" clearable />
               </NFormItemGi>
               <NFormItemGi span="24 s:12 m:8" label="状态" class="pr-24px">
-                <DictSelect v-model:value="searchParams.status" dict-code="dis_enable_status" clearable />
+                <DictSelect v-model:value="searchParams.status" dict-code="dis_enable_status_enum" clearable />
               </NFormItemGi>
               <NFormItemGi span="24 s:12 m:8" class="pr-24px">
                 <NSpace class="w-full" justify="end">
@@ -329,7 +329,7 @@ function handleResetSearch() {
           <NInputNumber v-model:value="formModel.weight" class="w-full" :min="1" />
         </NFormItem>
         <NFormItem label="状态">
-          <DictRadio v-model:value="formModel.status" dict-code="dis_enable_status" />
+          <DictSelect v-model:value="formModel.status" dict-code="dis_enable_status_enum" />
         </NFormItem>
       </NForm>
       <template #footer>

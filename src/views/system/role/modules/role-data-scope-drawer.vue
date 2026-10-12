@@ -98,7 +98,7 @@ watch(visible, val => {
             <NInput :value="model.name" disabled />
           </NFormItem>
           <NFormItem label="数据范围" path="dataScope">
-            <DictSelect v-model:value="model.dataScope" dict-code="data_scope" />
+            <DictSelect v-model:value="model.dataScope" dict-code="data_scope_enum" />
           </NFormItem>
           <NFormItem v-if="model.dataScope === 5" label="部门范围" path="deptIds">
             <NTreeSelect

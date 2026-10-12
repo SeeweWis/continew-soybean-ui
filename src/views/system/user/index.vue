@@ -77,7 +77,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         width: 80,
         ellipsis: true,
         render(row) {
-          return <DictTag value={row.gender} dictCode="gender" />;
+          return <DictTag value={row.gender} dictCode="gender_enum" />;
         }
       },
       {
@@ -107,7 +107,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         align: 'center',
         width: 80,
         render(row) {
-          return <DictTag value={row.status} dictCode="dis_enable_status" />;
+          return <DictTag value={row.status} dictCode="dis_enable_status_enum" />;
         }
       },
       {

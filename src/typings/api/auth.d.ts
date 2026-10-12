@@ -20,6 +20,18 @@ declare namespace Api {
       uuid?: string;
     }
 
+    interface PhoneLoginForm extends LoginFormBase {
+      authType: 'PHONE';
+      phone: string;
+      captcha: string;
+    }
+
+    interface EmailLoginForm extends LoginFormBase {
+      authType: 'EMAIL';
+      email: string;
+      captcha: string;
+    }
+
     interface SocialLoginForm extends LoginFormBase {
       authType: 'SOCIAL';
       source: string;
@@ -27,11 +39,14 @@ declare namespace Api {
       state: string;
     }
 
-    type LoginForm = PwdLoginForm | SocialLoginForm;
+    type LoginForm = PwdLoginForm | PhoneLoginForm | EmailLoginForm | SocialLoginForm;
 
     interface LoginToken {
-      token: string;
-      tenantId: CommonType.IdType;
+      accessToken: string;
+      tokenType: string;
+      expiresIn: number;
+      refreshExpiresIn?: number;
+      tenantId?: CommonType.IdType;
     }
 
     interface UserInfo {

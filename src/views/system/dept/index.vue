@@ -45,7 +45,7 @@ const { columns, columnChecks, data, getData, loading, scrollX } = useNaiveTable
       title: '状态',
       align: 'center',
       width: 90,
-      render: row => <DictTag dictCode="dis_enable_status" value={(row as unknown as Api.System.ContinewDept).status} size="small" />
+      render: row => <DictTag dictCode="dis_enable_status_enum" value={(row as unknown as Api.System.ContinewDept).status} size="small" />
     },
     {
       key: 'description',

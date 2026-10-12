@@ -156,7 +156,7 @@ watch(visible, () => {
           <MenuTreeSelect v-model:value="model.parentId" />
         </NFormItem>
         <NFormItem label="菜单类型" path="type">
-          <DictRadio v-model:value="model.type" dict-code="menu_type" />
+          <DictSelect v-model:value="model.type" dict-code="menu_type_enum" />
         </NFormItem>
         <NFormItem label="菜单名称" path="title">
           <NInput v-model:value="model.title" placeholder="请输入菜单名称" />
@@ -192,7 +192,7 @@ watch(visible, () => {
           <NSwitch v-model:value="model.isHidden" />
         </NFormItem>
         <NFormItem label="状态" path="status">
-          <DictRadio v-model:value="model.status" dict-code="dis_enable_status" />
+          <DictSelect v-model:value="model.status" dict-code="dis_enable_status_enum" />
         </NFormItem>
       </NForm>
       <template #footer>

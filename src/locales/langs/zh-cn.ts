@@ -436,6 +436,9 @@ const local: App.I18n.Schema = {
         sendCodeSuccess: '验证码发送成功',
         imageCodePlaceholder: '请输入图片验证码'
       },
+      emailLogin: {
+        title: '邮箱登录'
+      },
       register: {
         title: '注册账号',
         agreement: '我已经仔细阅读并接受',

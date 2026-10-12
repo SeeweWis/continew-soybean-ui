@@ -3,7 +3,7 @@ import { onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useLoading } from '@sa/hooks';
 import { fetchCreateNotice, fetchGetNoticeDetail, fetchUpdateNotice } from '@/service/api/system';
-import { useNaiveForm } from '@/hooks/common/form';
+import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { useDict } from '@/hooks/business/dict';
 import { $t } from '@/locales';
 
@@ -14,6 +14,7 @@ defineOptions({
 const route = useRoute();
 const router = useRouter();
 const { formRef, validate } = useNaiveForm();
+const { createRequiredRule } = useFormRules();
 const { loading, startLoading, endLoading } = useLoading();
 
 useDict('notice_type');
@@ -23,7 +24,9 @@ const editId = ref<CommonType.IdType | null>(null);
 const model = reactive({
   title: '',
   type: null as string | null,
-  noticeScope: 'ALL',
+  noticeScope: 1 as 1 | 2,
+  noticeUsers: [] as CommonType.IdType[],
+  noticeMethods: [1] as number[],
   isTiming: false,
   publishTime: null as string | null,
   isTop: false,
@@ -37,7 +40,9 @@ async function getDetail(id: CommonType.IdType) {
     Object.assign(model, {
       title: data.title,
       type: data.type,
-      noticeScope: data.noticeScope || 'ALL',
+      noticeScope: data.noticeScope ?? 1,
+      noticeUsers: data.noticeUsers ?? [],
+      noticeMethods: data.noticeMethods ?? [],
       isTiming: data.isTiming ?? false,
       publishTime: data.publishTime,
       isTop: data.isTop ?? false,
@@ -48,13 +53,19 @@ async function getDetail(id: CommonType.IdType) {
 }
 
 async function handleSubmit() {
-  await validate();
+  try {
+    await validate();
+  } catch {
+    return;
+  }
 
   const data: Api.System.ContinewNoticeReq = {
     title: model.title,
     content: model.content,
     type: model.type,
     noticeScope: model.noticeScope,
+    noticeUsers: model.noticeScope === 2 ? model.noticeUsers.map(String) : undefined,
+    noticeMethods: model.noticeMethods,
     isTiming: model.isTiming,
     publishTime: model.publishTime ?? undefined,
     isTop: model.isTop
@@ -97,10 +108,18 @@ onMounted(() => {
             <DictSelect v-model:value="model.type" dict-code="notice_type" placeholder="请选择公告类型" />
           </NFormItem>
           <NFormItem label="通知范围" path="noticeScope">
-            <NRadioGroup v-model:value="model.noticeScope">
-              <NRadio value="ALL" label="全部用户" />
-              <NRadio value="USER" label="指定用户" />
-            </NRadioGroup>
+            <DictSelect v-model:value="model.noticeScope" dict-code="notice_scope_enum" />
+          </NFormItem>
+          <NFormItem
+            v-if="model.noticeScope === 2"
+            label="通知用户"
+            path="noticeUsers"
+            :rule="createRequiredRule('请选择通知用户')"
+          >
+            <UserSelect v-model:value="model.noticeUsers" multiple />
+          </NFormItem>
+          <NFormItem label="通知方式" path="noticeMethods">
+            <DictSelect v-model:value="model.noticeMethods" dict-code="notice_method_enum" multiple />
           </NFormItem>
           <NFormItem label="是否置顶" path="isTop">
             <NSwitch v-model:value="model.isTop" />

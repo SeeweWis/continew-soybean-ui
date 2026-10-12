@@ -2,7 +2,6 @@
 import { toRaw } from 'vue';
 import { jsonClone } from '@sa/utils';
 import { useNaiveForm } from '@/hooks/common/form';
-import { useDict } from '@/hooks/business/dict';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -16,8 +15,6 @@ interface Emits {
 const emit = defineEmits<Emits>();
 
 const { formRef, validate, restoreValidation } = useNaiveForm();
-
-const { options: sysNormalDisableOptions } = useDict('dis_enable_status', false);
 
 const model = defineModel<Api.System.DeptSearchParams>('model', { required: true });
 
@@ -49,10 +46,10 @@ async function search() {
               <NInput v-model:value="model.deptName" :placeholder="$t('page.system.dept.form.deptName.required')" />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:8 " :label="$t('page.system.dept.status')" path="status" class="pr-24px">
-              <NSelect
+              <DictSelect
                 v-model:value="model.status"
                 :placeholder="$t('page.system.dept.form.status.required')"
-                :options="sysNormalDisableOptions"
+                dict-code="dis_enable_status_enum"
                 clearable
               />
             </NFormItemGi>

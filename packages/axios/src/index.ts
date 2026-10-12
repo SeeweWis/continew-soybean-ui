@@ -78,6 +78,10 @@ function createCommonRequest<
       return Promise.reject(backendError);
     },
     async (error: AxiosError<ResponseData>) => {
+      if (error.response?.status === 401) {
+        const recovered = await opts.onBackendFail(error.response, instance);
+        if (recovered) return recovered;
+      }
       await opts.onError(error);
 
       return Promise.reject(error);

@@ -37,7 +37,7 @@ const { columns, columnChecks, data, getData, loading, scrollX } = useNaiveTable
       title: '类型',
       align: 'center',
       width: 80,
-      render: row => <DictTag dictCode="menu_type" value={row.type} size="small" />
+      render: row => <DictTag dictCode="menu_type_enum" value={row.type} size="small" />
     },
     {
       key: 'icon',
@@ -85,7 +85,7 @@ const { columns, columnChecks, data, getData, loading, scrollX } = useNaiveTable
       title: '状态',
       align: 'center',
       width: 80,
-      render: row => <DictTag dictCode="dis_enable_status" value={row.status} size="small" />
+      render: row => <DictTag dictCode="dis_enable_status_enum" value={row.status} size="small" />
     },
     {
       key: 'operate',
@@ -206,7 +206,7 @@ async function handleClearCache() {
                 <NInput v-model:value="searchParams.title" placeholder="请输入菜单名称" @keyup.enter="getData" />
               </NFormItemGi>
               <NFormItemGi span="24 s:12 m:8" label="状态" class="pr-24px">
-                <DictSelect v-model:value="searchParams.status" dict-code="dis_enable_status" clearable />
+                <DictSelect v-model:value="searchParams.status" dict-code="dis_enable_status_enum" clearable />
               </NFormItemGi>
               <NFormItemGi span="24 s:12 m:8" class="pr-24px">
                 <NSpace class="w-full" justify="end">

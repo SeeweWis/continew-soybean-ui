@@ -1,6 +1,7 @@
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { BACKEND_ERROR_CODE, REQUEST_CANCELED_CODE, createFlatRequest } from '@sa/axios';
 import { useAuthStore } from '@/store/modules/auth';
+import { getToken, getSessionVersion } from '@/store/modules/auth/shared';
 import { localStg, sessionStg } from '@/utils/storage';
 import { getServiceBaseURL } from '@/utils/service';
 import { getAuthorization, handleExpiredRequest, showErrorMsg } from './shared';
@@ -12,6 +13,7 @@ const { baseURL } = getServiceBaseURL(import.meta.env, isHttpProxy);
 export const request = createFlatRequest(
   {
     baseURL,
+    withCredentials: true,
     'axios-retry': {
       retries: 0
     }
@@ -34,10 +36,10 @@ export const request = createFlatRequest(
       return response.data.data;
     },
     async onRequest(config) {
+      config.authSessionVersion ??= getSessionVersion();
       const isToken = config.headers?.isToken === false;
       // set token
-      const token = localStg.get('token');
-      if (token && !isToken) {
+      if (!isToken) {
         const Authorization = getAuthorization();
         Object.assign(config.headers, { Authorization });
       }
@@ -64,7 +66,7 @@ export const request = createFlatRequest(
     },
     async onBackendFail(response, instance) {
       const authStore = useAuthStore();
-      const responseCode = String(response.data.code);
+      const responseCode = String(response.data?.code);
 
       function handleLogout() {
         authStore.resetStore();
@@ -77,7 +79,28 @@ export const request = createFlatRequest(
         request.state.errMsgStack = request.state.errMsgStack.filter(msg => msg !== response.data.msg);
       }
 
-      const isLogin = Boolean(localStg.get('token'));
+      const isLogin = Boolean(getToken());
+      const expiredTokenCodes = import.meta.env.VITE_SERVICE_EXPIRED_TOKEN_CODES?.split(',') || [];
+      const isExpired = response.status === 401 || responseCode === '401' || expiredTokenCodes.includes(responseCode);
+      if (isExpired && response.config.headers.isToken !== false) {
+        if (response.config.authSessionVersion !== getSessionVersion()) return null;
+        if (isLogin && response.config.headers.authRetry !== false) {
+          // A late response may carry the token from before another request refreshed it.
+          const changed = response.config.headers.Authorization !== getAuthorization();
+          const success = changed || (await handleExpiredRequest(request.state));
+          if (success && getToken()) {
+            response.config.headers.authRetry = false;
+            response.config.headers.repeatSubmit = false;
+            response.config.headers.Authorization = getAuthorization();
+            return instance.request(response.config) as Promise<AxiosResponse>;
+          }
+        } else if (isLogin && response.config.headers.Authorization === getAuthorization()) {
+          void authStore.resetStore();
+        }
+        return null;
+      }
+
+      if (response.config.headers.isToken === false) return null;
 
       // when the backend response code is in `logoutCodes`, it means the user will be logged out and redirected to login page
       const logoutCodes = import.meta.env.VITE_SERVICE_LOGOUT_CODES?.split(',') || [];
@@ -121,19 +144,6 @@ export const request = createFlatRequest(
         return null;
       }
 
-      // when the backend response code is in `expiredTokenCodes`, it means the token is expired, and refresh token
-      // the api `refreshToken` can not return error code in `expiredTokenCodes`, otherwise it will be a dead loop, should return `logoutCodes` or `modalLogoutCodes`
-      const expiredTokenCodes = import.meta.env.VITE_SERVICE_EXPIRED_TOKEN_CODES?.split(',') || [];
-      if (expiredTokenCodes.includes(responseCode)) {
-        const success = await handleExpiredRequest(request.state);
-        if (success) {
-          const Authorization = getAuthorization();
-          Object.assign(response.config.headers, { Authorization });
-
-          return instance.request(response.config) as Promise<AxiosResponse>;
-        }
-      }
-
       return null;
     },
     onError(error) {
@@ -146,20 +156,24 @@ export const request = createFlatRequest(
       let backendErrorCode = '';
 
       // get backend error message and code
-      if (error.code === BACKEND_ERROR_CODE) {
+      if (error.code === BACKEND_ERROR_CODE || error.response) {
         message = error.response?.data?.msg || message;
         backendErrorCode = String(error.response?.data?.code || '');
       }
 
+      if (error.config?.url === '/auth/refresh' && (error.response?.status === 401 || backendErrorCode === '401')) {
+        return;
+      }
+
       // the error message is displayed in the modal
       const modalLogoutCodes = import.meta.env.VITE_SERVICE_MODAL_LOGOUT_CODES?.split(',') || [];
-      if (modalLogoutCodes.includes(backendErrorCode)) {
+      if (error.config?.headers.isToken !== false && modalLogoutCodes.includes(backendErrorCode)) {
         return;
       }
 
       // when the token is expired, refresh token and retry request, so no need to show error message
       const expiredTokenCodes = import.meta.env.VITE_SERVICE_EXPIRED_TOKEN_CODES?.split(',') || [];
-      if (expiredTokenCodes.includes(backendErrorCode)) {
+      if (error.config?.headers.isToken !== false && expiredTokenCodes.includes(backendErrorCode)) {
         return;
       }
 

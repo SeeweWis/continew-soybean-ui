@@ -61,7 +61,7 @@ const { columns, columnChecks, data, getData, loading, scrollX } = useNaiveTable
       minWidth: 160,
       render: row => {
         if (!row.dataScope) return null;
-        return <DictTag dictCode="data_scope" value={row.dataScope} />;
+        return <DictTag dictCode="data_scope_enum" value={row.dataScope} />;
       }
     },
     {

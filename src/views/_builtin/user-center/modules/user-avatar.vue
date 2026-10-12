@@ -70,27 +70,28 @@ async function handleFileSelect(data: { file: UploadFileInfo }) {
 
 /** 处理裁剪 */
 async function handleCrop() {
-  if (!cropperRef.value) return;
+  if (!cropperRef.value || loading.value) return;
 
   startLoading();
   try {
     const { canvas } = cropperRef.value.getResult();
 
     // 将 canvas 转换为 blob
-    canvas.toBlob(async (blob: Blob | null) => {
-      if (!blob) return;
+    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('图片裁剪失败');
 
-      const formData = new FormData();
-      formData.append('avatarfile', blob, options.fileName || 'avatar.png');
+    const formData = new FormData();
+    formData.append('avatarFile', blob, 'avatar.png');
 
-      const { error } = await fetchUpdateUserAvatar(formData);
-      if (!error) {
-        window.$message?.success('头像更新成功！');
-        imageUrl.value = URL.createObjectURL(blob);
-        authStore.userInfo.avatar = imageUrl.value;
-        hideDrawer();
-      }
-    }, 'image/png');
+    const { data, error } = await fetchUpdateUserAvatar(formData);
+    if (!error) {
+      window.$message?.success('头像更新成功！');
+      imageUrl.value = data.avatar;
+      authStore.userInfo.avatar = imageUrl.value;
+      hideDrawer();
+    }
+  } catch (error) {
+    window.$message?.error((error as Error).message);
   } finally {
     endLoading();
   }
@@ -104,17 +105,33 @@ function handleClose() {
 </script>
 
 <template>
-  <div class="cursor-pointer" @click="handleEdit">
-    <div class="relative h-120px w-120px overflow-hidden rounded-full">
-      <img :src="imageUrl" alt="user-avatar" class="h-full w-full object-cover" />
-      <div
-        class="absolute inset-0 flex-center bg-black/50 text-white opacity-0 transition-opacity duration-300 hover:opacity-100"
-      >
-        <SvgIcon icon="ep:plus" class="text-24px" />
+  <div>
+    <button
+      type="button"
+      class="block cursor-pointer border-0 bg-transparent p-0"
+      aria-label="修改头像"
+      @click="handleEdit"
+    >
+      <div class="relative h-120px w-120px overflow-hidden rounded-full">
+        <img :src="imageUrl" alt="user-avatar" class="h-full w-full object-cover" />
+        <div
+          class="absolute inset-0 flex-center bg-black/50 text-white opacity-0 transition-opacity duration-300 hover:opacity-100"
+        >
+          <SvgIcon icon="ep:plus" class="text-24px" />
+        </div>
       </div>
-    </div>
+    </button>
 
-    <NModal v-model:show="showModal" preset="card" title="修改头像" class="w-400px" @close="handleClose">
+    <NModal
+      v-model:show="showModal"
+      preset="card"
+      title="修改头像"
+      class="w-400px max-w-90%"
+      :mask-closable="!loading"
+      :closable="!loading"
+      :close-on-esc="!loading"
+      @close="handleClose"
+    >
       <div class="flex-col-center gap-20px py-20px">
         <div class="h-300px w-full">
           <Cropper
@@ -126,7 +143,7 @@ function handleClose() {
         </div>
         <div class="flex gap-12px">
           <NUpload accept=".jpg,.jpeg,.png,.gif" :max="1" :show-file-list="false" @before-upload="handleFileSelect">
-            <NButton class="min-w-100px">选择图片</NButton>
+            <NButton class="min-w-100px" :disabled="loading">选择图片</NButton>
           </NUpload>
           <NButton type="primary" class="min-w-100px" :loading="loading" @click="handleCrop">确认裁剪</NButton>
         </div>

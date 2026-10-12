@@ -81,8 +81,8 @@ handleLoginRember();
 
 <template>
   <div>
-    <div class="mb-5px text-32px text-black font-600 dark:text-white">登录到您的账户</div>
-    <div class="pb-18px text-16px text-#858585">欢迎回来！请输入您的账户信息</div>
+    <div class="mb-5px text-32px font-600 text-[var(--login-text-primary)]">登录到您的账户</div>
+    <div class="pb-18px text-16px text-[var(--login-text-secondary)]">欢迎回来！请输入您的账户信息</div>
     <NForm
       ref="formRef"
       :model="model"
@@ -134,6 +134,7 @@ handleLoginRember();
   img {
     height: 42px;
     border-radius: 8px;
+    background: var(--login-code-background);
   }
 }
 

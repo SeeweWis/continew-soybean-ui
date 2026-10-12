@@ -1,10 +1,11 @@
 <script setup lang="tsx">
-import { reactive, ref } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { fetchDeleteTenant, fetchGetTenantPackageDict, fetchGetTenantPage, fetchResetTenantAdminPwd } from '@/service/api/system';
 import { useAppStore } from '@/store/modules/app';
 import { useAuth } from '@/hooks/business/auth';
 import { defaultTransform, useNaivePaginatedTable } from '@/hooks/common/table';
+import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 import ButtonIcon from '@/components/custom/button-icon.vue';
 import DictTag from '@/components/custom/dict-tag.vue';
@@ -83,7 +84,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         title: '状态',
         align: 'center',
         width: 80,
-        render: row => <DictTag dictCode="dis_enable_status" value={row.status} size="small" />
+        render: row => <DictTag dictCode="dis_enable_status_enum" value={row.status} size="small" />
       },
       {
         key: 'operate',
@@ -92,7 +93,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         width: 220,
         render: row => {
           const editBtn = () => {
-            if (!hasAuth('tenant:update')) return null;
+            if (!hasAuth('tenant:management:update')) return null;
             return (
               <ButtonIcon
                 text
@@ -104,20 +105,21 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
             );
           };
           const resetPwdBtn = () => {
-            if (!hasAuth('tenant:update')) return null;
+            if (!hasAuth('tenant:management:updateAdminUserPwd')) return null;
             return (
               <ButtonIcon
                 text
                 type="warning"
                 icon="material-symbols:key-outline-rounded"
                 tooltipContent="重置管理员密码"
-                popconfirmContent="确定重置该租户管理员密码吗？重置后密码为默认值。"
-                onPositiveClick={() => handleResetPwd(row.id)}
+                aria-label="重置管理员密码"
+                focusable
+                onClick={() => handleResetPwd(row)}
               />
             );
           };
           const deleteBtn = () => {
-            if (!hasAuth('tenant:delete')) return null;
+            if (!hasAuth('tenant:management:delete')) return null;
             return (
               <ButtonIcon
                 text
@@ -160,11 +162,47 @@ function handleEdit(id: CommonType.IdType) {
   drawerVisible.value = true;
 }
 
-async function handleResetPwd(id: CommonType.IdType) {
-  const { error } = await fetchResetTenantAdminPwd(id, '123456');
-  if (error) return;
-  window.$message?.success('重置成功，新密码为 123456');
+const passwordVisible = ref(false);
+const passwordLoading = ref(false);
+const passwordTenant = ref<Api.System.ContinewTenant | null>(null);
+const passwordModel = reactive({ password: '', confirmPassword: '' });
+const { formRef: passwordFormRef, validate: validatePassword, restoreValidation } = useNaiveForm();
+const { patternRules, createRequiredRule } = useFormRules();
+const passwordRules = {
+  password: { ...patternRules.pwd, required: true },
+  confirmPassword: createRequiredRule('请再次输入新密码')
+};
+
+function handleResetPwd(row: Api.System.ContinewTenant) {
+  passwordTenant.value = row;
+  passwordVisible.value = true;
 }
+
+async function submitPassword() {
+  if (passwordLoading.value || !passwordTenant.value) return;
+  await validatePassword();
+  if (passwordModel.password !== passwordModel.confirmPassword) {
+    window.$message?.error('两次输入的密码不一致');
+    return;
+  }
+  passwordLoading.value = true;
+  try {
+    const { error } = await fetchResetTenantAdminPwd(passwordTenant.value.id, passwordModel.password);
+    if (error) return;
+    window.$message?.success('管理员密码已重置');
+    passwordVisible.value = false;
+  } catch (error) {
+    window.$message?.error((error as Error).message);
+  } finally {
+    passwordLoading.value = false;
+  }
+}
+
+watch(passwordVisible, () => {
+  passwordModel.password = '';
+  passwordModel.confirmPassword = '';
+  restoreValidation();
+});
 
 async function handleDelete(id: CommonType.IdType) {
   const { error } = await fetchDeleteTenant(id);
@@ -223,7 +261,7 @@ getPackageOptions();
           <TableHeaderOperation
             v-model:columns="columnChecks"
             :loading="loading"
-            :show-add="hasAuth('tenant:create')"
+            :show-add="hasAuth('tenant:management:create')"
             :show-delete="false"
             @add="handleAdd"
             @refresh="getData"
@@ -249,6 +287,41 @@ getPackageOptions();
         :tenant-id="editingId"
         @submitted="getData"
       />
+      <NModal
+        v-model:show="passwordVisible"
+        preset="card"
+        title="重置管理员密码"
+        class="w-480px max-w-90%"
+        :mask-closable="!passwordLoading"
+        :closable="!passwordLoading"
+        :close-on-esc="!passwordLoading"
+      >
+        <NForm ref="passwordFormRef" :model="passwordModel" :rules="passwordRules" :disabled="passwordLoading">
+          <NFormItem label="管理员账号"><NInput :value="passwordTenant?.adminUsername" disabled /></NFormItem>
+          <NFormItem label="新密码" path="password">
+            <NInput
+              v-model:value="passwordModel.password"
+              type="password"
+              show-password-on="click"
+              autocomplete="new-password"
+            />
+          </NFormItem>
+          <NFormItem label="确认密码" path="confirmPassword">
+            <NInput
+              v-model:value="passwordModel.confirmPassword"
+              type="password"
+              show-password-on="click"
+              autocomplete="new-password"
+            />
+          </NFormItem>
+        </NForm>
+        <template #footer>
+          <NSpace justify="end">
+            <NButton :disabled="passwordLoading" @click="passwordVisible = false">取消</NButton>
+            <NButton type="primary" :loading="passwordLoading" @click="submitPassword">确认重置</NButton>
+          </NSpace>
+        </template>
+      </NModal>
     </NCard>
   </div>
 </template>

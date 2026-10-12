@@ -21,6 +21,17 @@ const { loading: saveLoading, startLoading: startSaveLoading, endLoading: endSav
 const options = ref<Api.System.ContinewOption[]>([]);
 const formModel = reactive<Record<string, string>>({});
 
+const booleanOptionCodes = new Set([
+  'LOGIN_CAPTCHA_ENABLED',
+  'MAIL_SSL_ENABLED',
+  'PASSWORD_ALLOW_CONTAIN_USERNAME',
+  'PASSWORD_REQUIRE_SYMBOLS'
+]);
+const booleanOptions = [
+  { label: '是', value: '1' },
+  { label: '否', value: '0' }
+];
+
 /** 布尔型参数（渲染开关） */
 function isBooleanOption(option: Api.System.ContinewOption) {
   return option.value === 'true' || option.value === 'false';
@@ -74,8 +85,13 @@ watch(
   <NSpin :show="loading">
     <NForm label-placement="left" :label-width="240" class="max-w-760px">
       <NFormItem v-for="option in options" :key="option.code">
+        <NSelect
+          v-if="booleanOptionCodes.has(option.code)"
+          v-model:value="formModel[option.code]"
+          :options="booleanOptions"
+        />
         <NSwitch
-          v-if="isBooleanOption(option)"
+          v-else-if="isBooleanOption(option)"
           v-model:value="formModel[option.code]"
           checked-value="true"
           unchecked-value="false"

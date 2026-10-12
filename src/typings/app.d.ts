@@ -578,6 +578,9 @@ declare namespace App {
             sendCodeSuccess: string;
             imageCodePlaceholder: string;
           };
+          emailLogin: {
+            title: string;
+          };
           register: {
             title: string;
             agreement: string;

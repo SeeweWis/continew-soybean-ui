@@ -7,6 +7,8 @@ import { localStg } from '@/utils/storage';
 import { SetupStoreId } from '@/enum';
 import { $t, setLocale } from '@/locales';
 import { setDayjsLocale } from '@/locales/dayjs';
+import { fetchGetSiteOptionDict } from '@/service/api/system';
+import defaultLogo from '@/assets/svg-icon/logo.svg';
 import { useRouteStore } from '../route';
 import { useTabStore } from '../tab';
 import { useThemeStore } from '../theme';
@@ -50,6 +52,29 @@ export const useAppStore = defineStore(SetupStoreId.App, () => {
   }
 
   const locale = ref<App.I18n.LangType>(localStg.get('lang') || 'zh-CN');
+
+  const siteLogo = ref(defaultLogo);
+  const siteTitle = ref($t('system.title'));
+  const siteFavicon = ref('');
+  const siteCopyright = ref('');
+  const siteBeian = ref('');
+
+  function setSiteConfig(config: Record<string, string>) {
+    siteLogo.value = config.SITE_LOGO && config.SITE_LOGO !== '/logo.svg' ? config.SITE_LOGO : defaultLogo;
+    siteTitle.value = config.SITE_TITLE || $t('system.title');
+    siteFavicon.value = config.SITE_FAVICON || '';
+    siteCopyright.value = config.SITE_COPYRIGHT || '';
+    siteBeian.value = config.SITE_BEIAN || '';
+    document.title = siteTitle.value;
+    document.querySelector<HTMLLinkElement>('link[rel="icon"]')?.setAttribute('href', siteFavicon.value || '/favicon.svg');
+  }
+
+  async function initSiteConfig() {
+    const { data, error } = await fetchGetSiteOptionDict();
+    if (error) return;
+
+    setSiteConfig(Object.fromEntries(data.map(item => [item.label, item.value == null ? '' : String(item.value)])));
+  }
 
   const localeOptions: App.I18n.LangOption[] = [
     {
@@ -148,6 +173,13 @@ export const useAppStore = defineStore(SetupStoreId.App, () => {
     reloadPage,
     fullContent,
     locale,
+    siteLogo,
+    siteTitle,
+    siteFavicon,
+    siteCopyright,
+    siteBeian,
+    initSiteConfig,
+    setSiteConfig,
     localeOptions,
     changeLocale,
     themeDrawerVisible,

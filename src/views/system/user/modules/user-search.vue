@@ -55,7 +55,7 @@ async function search() {
         <DictSelect
           v-model:value="model.status"
           :placeholder="$t('page.system.user.form.status.required')"
-          dict-code="dis_enable_status"
+          dict-code="dis_enable_status_enum"
           clearable
         />
       </NFormItemGi>

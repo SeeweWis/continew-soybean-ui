@@ -1,16 +1,18 @@
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive } from 'vue';
 import { useRoute } from 'vue-router';
 import { defineStore } from 'pinia';
 import { useLoading } from '@sa/hooks';
 import { fetchGetUserInfo, fetchLogin, fetchLogout } from '@/service/api';
+import { request } from '@/service/request';
+import { handleExpiredRequest } from '@/service/request/shared';
 import { useRouterPush } from '@/hooks/common/router';
 import { localStg } from '@/utils/storage';
-import { encrypt } from '@/utils/jsencrypt';
+import { encryptPassword } from '@/utils/jsencrypt';
 import { SetupStoreId } from '@/enum';
 import { useRouteStore } from '../route';
 import { useTabStore } from '../tab';
 import { useNoticeStore } from '../notice';
-import { clearAuthStorage, getToken } from './shared';
+import { accessToken, clearAuthStorage, getToken, getSessionVersion, setAccessSession } from './shared';
 
 export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
   const route = useRoute();
@@ -21,7 +23,9 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
   const { toLogin, redirectFromLogin } = useRouterPush(false);
   const { loading: loginLoading, startLoading, endLoading } = useLoading();
 
-  const token = ref('');
+  const token = accessToken;
+  let restored = false;
+  let restorePromise: Promise<void> | null = null;
 
   const userInfo: Api.Auth.UserInfo = reactive({
     roles: [],
@@ -40,14 +44,15 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
   const isLogin = computed(() => Boolean(token.value));
 
   /** Reset auth store */
-  async function resetStore() {
+  async function resetStore(redirect = true) {
+    restored = true;
     recordUserId();
 
     clearAuthStorage();
 
     authStore.$reset();
 
-    if (!route.meta.constant) {
+    if (redirect && !route?.meta.constant) {
       await toLogin();
     }
 
@@ -57,8 +62,14 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
   }
 
   async function logout() {
-    await fetchLogout();
-    resetStore();
+    const previousToken = getToken();
+    clearAuthStorage();
+    await request.state.refreshTokenPromise;
+    try {
+      await fetchLogout(previousToken);
+    } finally {
+      await resetStore();
+    }
   }
 
   /** Record the user ID of the previous login session Used to compare with the current user ID on next login */
@@ -102,77 +113,79 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
    * @param [redirect=true] Whether to redirect after login. Default is `true`
    */
   async function login(loginForm: Api.Auth.LoginForm, redirect = true) {
+    if (loginLoading.value) return;
     startLoading();
+    restored = true;
+    clearAuthStorage();
+    const version = getSessionVersion();
+    try {
+      await request.state.refreshTokenPromise;
+      if (version !== getSessionVersion()) return;
 
-    const { VITE_APP_CLIENT_ID } = import.meta.env;
+      const { VITE_APP_CLIENT_ID } = import.meta.env;
 
-    const loginData: Api.Auth.LoginForm = {
-      ...loginForm,
-      clientId: VITE_APP_CLIENT_ID!
-    };
+      const loginData: Api.Auth.LoginForm = {
+        ...loginForm,
+        clientId: VITE_APP_CLIENT_ID!
+      };
 
-    if (loginData.authType === 'ACCOUNT') {
-      const password = encrypt(loginData.password);
-      if (!password) {
-        endLoading();
-        return Promise.reject(new Error('密码加密失败'));
+      if (loginData.authType === 'ACCOUNT') {
+        loginData.password = encryptPassword(loginData.password);
       }
-      loginData.password = password;
-    }
 
-    const { data: loginToken, error } = await fetchLogin(loginData);
+      const { data: loginToken, error } = await fetchLogin(loginData);
+      if (version !== getSessionVersion()) return;
 
-    if (!error) {
-      const pass = await loginByToken(loginToken);
+      if (!error) {
+        const pass = await loginByToken(loginToken);
 
-      if (pass) {
-        // Check if the tab needs to be cleared
-        const isClear = checkTabClear();
-        let needRedirect = redirect;
+        if (pass) {
+          // Check if the tab needs to be cleared
+          const isClear = checkTabClear();
+          let needRedirect = redirect;
 
-        if (isClear) {
-          // If the tab needs to be cleared,it means we don't need to redirect.
-          needRedirect = false;
+          if (isClear) {
+            // If the tab needs to be cleared,it means we don't need to redirect.
+            needRedirect = false;
+          }
+          await redirectFromLogin(needRedirect);
+
+          // window.$notification?.success({
+          //   title: $t('page.login.common.loginSuccess'),
+          //   content: $t('page.login.common.welcomeBack', { userName: userInfo.userName }),
+          //   duration: 4500
+          // });
         }
-        await redirectFromLogin(needRedirect);
-
-        // window.$notification?.success({
-        //   title: $t('page.login.common.loginSuccess'),
-        //   content: $t('page.login.common.welcomeBack', { userName: userInfo.userName }),
-        //   duration: 4500
-        // });
+      } else {
+        void resetStore(false);
       }
-    } else {
-      resetStore();
+
+      return error ? Promise.reject(error) : Promise.resolve();
+    } finally {
+      endLoading();
     }
-
-    endLoading();
-
-    return error ? Promise.reject(error) : Promise.resolve();
   }
 
   async function loginByToken(loginToken: Api.Auth.LoginToken) {
-    // 1. stored in the localStorage, the later requests need it in headers
-    localStg.set('token', loginToken.token);
-    // 租户 ID，用于请求头 X-Tenant-Id
-    localStg.set('tenantId', loginToken.tenantId);
+    if (!loginToken.accessToken) throw new Error('登录响应缺少 accessToken');
+    setAccessSession(loginToken);
 
     // 2. get user info
     const pass = await getUserInfo();
 
     if (pass) {
-      token.value = loginToken.token;
-
       return true;
     }
 
+    await resetStore(false);
     return false;
   }
 
   async function getUserInfo() {
+    const version = getSessionVersion();
     const { data: info, error } = await fetchGetUserInfo();
 
-    if (!error) {
+    if (!error && version === getSessionVersion() && getToken()) {
       // update store
       Object.assign(userInfo, info);
 
@@ -190,8 +203,22 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
       const pass = await getUserInfo();
 
       if (!pass) {
-        resetStore();
+        void resetStore(false);
       }
+    }
+  }
+
+  async function restoreSession() {
+    if (restored) return restorePromise;
+    restored = true;
+    restorePromise = (async () => {
+      const success = await handleExpiredRequest(request.state);
+      if (success) await initUserInfo();
+    })();
+    try {
+      await restorePromise;
+    } finally {
+      restorePromise = null;
     }
   }
 
@@ -204,6 +231,7 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
     resetStore,
     login,
     logout,
+    restoreSession,
     initUserInfo
   };
 });

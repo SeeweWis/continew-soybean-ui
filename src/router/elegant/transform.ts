@@ -175,7 +175,7 @@ const routeMap: RouteMap = {
   "code_generator": "/code/generator",
   "home": "/home",
   "iframe-page": "/iframe-page/:url",
-  "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?",
+  "login": "/login/:module(pwd-login|code-login|email-login|register|reset-pwd|bind-wechat)?",
   "monitor": "/monitor",
   "monitor_log": "/monitor/log",
   "monitor_online": "/monitor/online",

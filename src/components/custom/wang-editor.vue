@@ -36,10 +36,10 @@ const editorConfig: Partial<IEditorConfig> = {
       server: `${baseURL}/resource/oss/upload`,
       fieldName: 'file',
       meta: {},
-      headers: {
+      headers: () => ({
         Authorization: `Bearer ${getToken()}`,
         clientid: import.meta.env.VITE_APP_CLIENT_ID!
-      },
+      }),
       metaWithUrl: false,
       allowedFileTypes: ['image/*'],
       customInsert(res: any, insertFn: InsertFnType) {

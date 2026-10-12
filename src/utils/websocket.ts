@@ -1,6 +1,6 @@
 import { useWebSocket } from '@vueuse/core';
 import { useNoticeStore } from '@/store/modules/notice';
-import { localStg } from './storage';
+import { getToken } from '@/store/modules/auth/shared';
 
 /**
  * 初始化 WebSocket
@@ -8,7 +8,7 @@ import { localStg } from './storage';
  * @param url - WebSocket 地址
  */
 export const initWebSocket = (url: string) => {
-  const token = localStg.get('token');
+  const token = getToken();
   if (import.meta.env.VITE_APP_WEBSOCKET === 'N' || !token) {
     return;
   }

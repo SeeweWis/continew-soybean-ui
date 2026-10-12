@@ -1,4 +1,5 @@
 import { request } from '@/service/request';
+import { encryptPassword } from '@/utils/jsencrypt';
 
 /** 获取租户分页列表 */
 export function fetchGetTenantPage(params: Api.System.ContinewTenantQuery) {
@@ -48,6 +49,6 @@ export function fetchResetTenantAdminPwd(id: CommonType.IdType, newPassword: str
   return request<boolean>({
     url: `/tenant/management/${id}/admin/pwd`,
     method: 'put',
-    data: { newPassword }
+    data: { password: encryptPassword(newPassword) }
   });
 }

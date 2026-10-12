@@ -52,7 +52,7 @@ async function search() {
               <NInput v-model:value="model.description" :placeholder="$t('page.system.dict.data.label')" />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:8" :label="$t('page.system.dict.data.status')" path="status" class="pr-24px">
-              <DictSelect v-model:value="model.status" dict-code="dis_enable_status" clearable />
+              <DictSelect v-model:value="model.status" dict-code="dis_enable_status_enum" clearable />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:8" class="pr-24px">
               <NSpace class="w-full" justify="end">

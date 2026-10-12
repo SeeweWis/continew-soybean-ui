@@ -440,6 +440,9 @@ const local: App.I18n.Schema = {
         sendCodeSuccess: 'Verification code sent successfully',
         imageCodePlaceholder: 'Please enter image verification code'
       },
+      emailLogin: {
+        title: 'Email Login'
+      },
       register: {
         title: 'Register',
         agreement: 'I have read and agree to',

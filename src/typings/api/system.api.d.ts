@@ -400,13 +400,13 @@ declare namespace Api {
     >;
 
     /** user profile operate params */
-    type UserProfileOperateParams = CommonType.RecordNullable<Pick<User, 'nickName' | 'email' | 'phonenumber' | 'sex'>>;
+    type UserProfileOperateParams = { nickname: string; gender: 0 | 1 | 2 };
 
     /** user password operate params */
-    type UserPasswordOperateParams = CommonType.RecordNullable<{
+    type UserPasswordOperateParams = {
       oldPassword: string;
       newPassword: string;
-    }>;
+    };
 
     /** user info */
     type UserInfo = {
@@ -452,6 +452,29 @@ declare namespace Api {
       status?: ContinewUserStatus | null;
       createTime?: [string, string] | null;
       sort?: string[];
+    };
+
+    type UserImportReq = {
+      importKey: string;
+      duplicateUser: 1 | 2 | 3;
+      duplicateEmail: 1 | 2 | 3;
+      duplicatePhone: 1 | 2 | 3;
+      defaultStatus: ContinewUserStatus;
+    };
+
+    type UserImportParseResp = {
+      importKey: string;
+      totalRows: number;
+      validRows: number;
+      duplicateUserRows: number;
+      duplicateEmailRows: number;
+      duplicatePhoneRows: number;
+    };
+
+    type UserImportResp = {
+      totalRows: number;
+      insertRows: number;
+      updateRows: number;
     };
 
     type ContinewUserReq = {
@@ -1142,6 +1165,8 @@ declare namespace Api {
       authType: string[];
       activeTimeout: number;
       timeout: number;
+      refreshTokenTimeout: number;
+      refreshTokenMode: 'COOKIE' | 'BODY';
       isConcurrent: boolean;
       replacedRange?: string;
       maxLoginCount: number;
@@ -1156,6 +1181,8 @@ declare namespace Api {
       authType: string[];
       activeTimeout: number;
       timeout: number;
+      refreshTokenTimeout: number;
+      refreshTokenMode: 'COOKIE' | 'BODY';
       isConcurrent: boolean;
       replacedRange?: string | null;
       maxLoginCount: number;
@@ -1182,12 +1209,13 @@ declare namespace Api {
       title: string;
       /** 类型（对应字典 notice_type） */
       type: string | null;
-      noticeScope?: string;
+      noticeScope?: 1 | 2;
+      noticeUsers?: string[];
       noticeMethods?: number[];
       isTiming?: boolean;
       publishTime?: string;
       isTop?: boolean;
-      status?: string;
+      status?: 1 | 2 | 3;
       isRead?: boolean;
       /** 内容（详情返回） */
       content?: string;
@@ -1200,12 +1228,13 @@ declare namespace Api {
       title: string;
       content: string;
       type: string | null;
-      noticeScope: string;
+      noticeScope: 1 | 2;
+      noticeUsers?: string[];
       noticeMethods?: number[];
       isTiming: boolean;
       publishTime?: string;
       isTop?: boolean;
-      status?: string;
+      status?: 1 | 2 | 3;
     };
 
     type ContinewNoticePage = {
@@ -1303,15 +1332,20 @@ declare namespace Api {
       id: CommonType.IdType;
       name: string;
       originalName?: string;
-      size?: number;
+      size?: number | null;
       url?: string;
       parentPath?: string;
+      path?: string;
+      sha256?: string;
+      thumbnailUrl?: string;
       extension?: string;
       contentType?: string;
-      type?: string;
+      type?: 0 | 1 | 2 | 3 | 4 | 5;
       storageId?: CommonType.IdType;
       storageName?: string;
       createTime?: string;
+      updateTime?: string;
+      deleteTime?: string;
     };
 
     type ContinewFilePage = {
@@ -1324,7 +1358,8 @@ declare namespace Api {
       size: number;
       originalName?: string | null;
       parentPath?: string | null;
-      type?: string | null;
+      type?: 0 | 1 | 2 | 3 | 4 | 5 | null;
+      sort?: string[];
     };
 
     /** 文件上传响应（后端 FileUploadResp） */
@@ -1340,8 +1375,10 @@ declare namespace Api {
       uploadTaskId?: string;
       /** INIT/UPLOADING/FINALIZING/COMPLETED/FAILED/NOT_FOUND */
       status?: string;
-      uploadedSize?: number;
-      totalSize?: number;
+      percentage?: number;
+      bytesRead?: number;
+      totalBytes?: number;
+      message?: string;
     };
 
     /** 分片上传初始化响应 */
@@ -1349,8 +1386,32 @@ declare namespace Api {
       uploadId: string;
       path: string;
       /** 分片大小（字节） */
-      partSize?: number;
-      partCount?: number;
+      partSize: number;
+      uploadedPartNumbers?: number[];
+    };
+
+    type ContinewMultipartPartResp = {
+      partNumber: number;
+      partETag?: string;
+      partSize: number;
+      success: boolean;
+      errorMessage?: string;
+    };
+
+    type ContinewFileUploadConfig = {
+      storageId: CommonType.IdType;
+      storageName: string;
+      storageCode: string;
+      storageType: 1 | 2;
+      multipartUploadThreshold: number;
+      multipartUploadPartSize: number;
+      multipartTempDir?: string;
+    };
+
+    type ContinewFileStatistics = {
+      size?: number;
+      number?: number;
+      data?: { type: number; size: number; number: number }[];
     };
 
     /** 存储（后端 StorageResp） */
@@ -1359,7 +1420,7 @@ declare namespace Api {
       name: string;
       code: string;
       status: 1 | 2;
-      type: string;
+      type: 1 | 2;
       accessKey?: string;
       endpoint?: string;
       bucketName?: string;
@@ -1379,7 +1440,7 @@ declare namespace Api {
     type ContinewStorageReq = {
       name: string;
       code: string;
-      type: string;
+      type: 1 | 2;
       accessKey?: string | null;
       secretKey?: string | null;
       endpoint?: string | null;
@@ -1451,7 +1512,7 @@ declare namespace Api {
       configId?: CommonType.IdType;
       phone?: string;
       params?: string;
-      status?: string;
+      status?: 1 | 2;
       resMsg?: string;
       createTime?: string;
     };
@@ -1466,7 +1527,7 @@ declare namespace Api {
       size: number;
       configId?: CommonType.IdType | null;
       phone?: string | null;
-      status?: string | null;
+      status?: 1 | 2 | null;
     };
 
     /** 个人消息（后端 MessageResp） */

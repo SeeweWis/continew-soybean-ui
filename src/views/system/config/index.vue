@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import OptionForm from './modules/option-form.vue';
+import SiteConfig from './site/index.vue';
 import ClientTable from './modules/client-table.vue';
 import StorageTable from './modules/storage-table.vue';
 import SmsConfigTable from './modules/sms-config-table.vue';
@@ -33,7 +34,7 @@ const activeKey = ref<ConfigKey>('site');
         </NLayoutSider>
         <NLayoutContent content-style="padding: 16px 24px;" :native-scrollbar="false">
           <template v-if="activeKey === 'site'">
-            <OptionForm category="SITE" />
+            <SiteConfig />
           </template>
           <template v-else-if="activeKey === 'security'">
             <OptionForm category="PASSWORD" />

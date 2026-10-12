@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue';
-import { useRouterPush } from '@/hooks/common/router';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { useCaptcha } from '@/hooks/business/captcha';
+import { useAuthStore } from '@/store/modules/auth';
 import { $t } from '@/locales';
 
 defineOptions({
   name: 'CodeLogin'
 });
 
-const { toggleLoginModule } = useRouterPush();
 const { formRef, validate } = useNaiveForm();
 const { label, isCounting, loading, getCaptcha } = useCaptcha();
+const authStore = useAuthStore();
 
 interface FormModel {
   phone: string;
@@ -34,37 +34,44 @@ const rules = computed<Record<keyof FormModel, App.Global.FormRule[]>>(() => {
 
 async function handleSubmit() {
   await validate();
-  // request
-  window.$message?.success($t('page.login.common.validateSuccess'));
+  try {
+    await authStore.login({
+      clientId: import.meta.env.VITE_APP_CLIENT_ID || '',
+      authType: 'PHONE',
+      phone: model.phone,
+      captcha: model.code
+    });
+  } catch {
+    // request errors are handled by the shared request layer
+  }
 }
 </script>
 
 <template>
-  <div class="mb-5px text-32px text-black font-600 sm:text-30px dark:text-white">
-    {{ $t('page.login.codeLogin.title') }}
-  </div>
-  <div class="pb-18px text-16px text-#858585">请输入您的手机号，我们将发送验证码到您的手机</div>
-  <NForm ref="formRef" :model="model" :rules="rules" size="large" :show-label="false" @keyup.enter="handleSubmit">
-    <NFormItem path="phone">
-      <NInput v-model:value="model.phone" :placeholder="$t('page.login.common.phonePlaceholder')" />
-    </NFormItem>
-    <NFormItem path="code">
-      <div class="w-full flex-y-center gap-16px">
-        <NInput v-model:value="model.code" :placeholder="$t('page.login.common.codePlaceholder')" />
-        <NButton size="large" :disabled="isCounting" :loading="loading" @click="getCaptcha(model.phone)">
-          {{ label }}
+  <div>
+    <div class="mb-5px text-32px font-600 sm:text-30px text-[var(--login-text-primary)]">
+      {{ $t('page.login.codeLogin.title') }}
+    </div>
+    <div class="pb-18px text-16px text-[var(--login-text-secondary)]">请输入您的手机号，我们将发送验证码到您的手机</div>
+    <NForm ref="formRef" :model="model" :rules="rules" size="large" :show-label="false" @keyup.enter="handleSubmit">
+      <NFormItem path="phone">
+        <NInput v-model:value="model.phone" :placeholder="$t('page.login.common.phonePlaceholder')" />
+      </NFormItem>
+      <NFormItem path="code">
+        <div class="w-full flex-y-center gap-16px">
+          <NInput v-model:value="model.code" :placeholder="$t('page.login.common.codePlaceholder')" />
+          <NButton size="large" :disabled="isCounting" :loading="loading" @click="getCaptcha(model.phone)">
+            {{ label }}
+          </NButton>
+        </div>
+      </NFormItem>
+      <NSpace vertical :size="20" class="w-full">
+        <NButton type="primary" size="large" block @click="handleSubmit">
+          {{ $t('page.login.codeLogin.title') }}
         </NButton>
-      </div>
-    </NFormItem>
-    <NSpace vertical :size="20" class="w-full">
-      <NButton type="primary" size="large" block @click="handleSubmit">
-        {{ $t('page.login.codeLogin.title') }}
-      </NButton>
-      <NButton size="large" block @click="toggleLoginModule('pwd-login')">
-        {{ $t('page.login.common.back') }}
-      </NButton>
-    </NSpace>
-  </NForm>
+      </NSpace>
+    </NForm>
+  </div>
 </template>
 
 <style scoped>

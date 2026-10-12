@@ -6,6 +6,7 @@ import { fetchUpdateUserPassword, fetchUpdateUserProfile } from '@/service/api/s
 import { useAuthStore } from '@/store/modules/auth';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import UserAvatar from './modules/user-avatar.vue';
+import UserContactForm from './modules/user-contact-form.vue';
 
 defineOptions({
   name: 'UserCenter'
@@ -36,10 +37,8 @@ const passwordModel: PasswordModel = reactive(createDefaultPasswordModel());
 
 function createDefaultProfileModel(): ProfileModel {
   return {
-    nickName: userInfo.nickname || '',
-    email: userInfo.email || '',
-    phonenumber: userInfo.phone || '',
-    sex: String(userInfo.gender ?? 0)
+    nickname: userInfo.nickname || '',
+    gender: userInfo.gender ?? 0
   };
 }
 
@@ -51,63 +50,74 @@ function createDefaultPasswordModel(): PasswordModel {
   };
 }
 
-type ProfileRuleKey = Extract<keyof ProfileModel, 'nickName' | 'email' | 'phonenumber' | 'sex'>;
+type ProfileRuleKey = keyof ProfileModel;
 type PasswordRuleKey = Extract<keyof PasswordModel, 'oldPassword' | 'newPassword' | 'confirmPassword'>;
 
 const profileRules: Record<ProfileRuleKey, App.Global.FormRule> = {
-  nickName: createRequiredRule('昵称不能为空'),
-  email: { ...patternRules.email, required: true },
-  phonenumber: { ...patternRules.phone, required: true },
-  sex: createRequiredRule('性别不能为空')
+  nickname: {
+    required: true,
+    pattern: /^[\u4e00-\u9fa5a-zA-Z0-9_-]{2,30}$/,
+    message: '昵称为 2–30 位中文、字母、数字、下划线或短横线',
+    trigger: 'blur'
+  },
+  gender: { ...createRequiredRule('性别不能为空'), type: 'number' }
 };
 
 const passwordRules: Record<PasswordRuleKey, App.Global.FormRule> = {
   oldPassword: createRequiredRule('旧密码不能为空'),
   confirmPassword: createRequiredRule('确认密码不能为空'),
-  newPassword: createRequiredRule('新密码不能为空')
+  newPassword: { ...patternRules.pwd, required: true }
 };
 
 async function updateProfile() {
+  if (btnLoading.value) return;
   await profileValidate();
   startBtnLoading();
-  const { error } = await fetchUpdateUserProfile(profileModel);
-  if (!error) {
-    window.$message?.success('更新成功');
-    // 更新本地用户信息
-    Object.assign(userInfo, {
-      nickname: profileModel.nickName,
-      email: profileModel.email,
-      phone: profileModel.phonenumber,
-      gender: Number(profileModel.sex) as 0 | 1 | 2
-    });
-    profileRestoreValidation();
+  try {
+    const { error } = await fetchUpdateUserProfile({ ...profileModel });
+    if (!error) {
+      window.$message?.success('更新成功');
+      // 更新本地用户信息
+      Object.assign(userInfo, {
+        nickname: profileModel.nickname,
+        gender: profileModel.gender
+      });
+      profileRestoreValidation();
+    }
+  } finally {
+    endBtnLoading();
   }
-  endBtnLoading();
 }
 
 async function updatePassword() {
+  if (btnLoading.value) return;
   await passwordValidate();
   if (passwordModel.newPassword !== passwordModel.confirmPassword) {
     window.$message?.error('两次输入的密码不一致');
     return;
   }
   startBtnLoading();
-  const { oldPassword, newPassword } = passwordModel;
-  const { error } = await fetchUpdateUserPassword({ oldPassword, newPassword });
-  if (!error) {
-    window.$message?.success('密码修改成功');
-    // 清空表单
-    Object.assign(passwordModel, createDefaultPasswordModel());
-    passwordRestoreValidation();
+  try {
+    const { oldPassword, newPassword } = passwordModel;
+    const { error } = await fetchUpdateUserPassword({ oldPassword, newPassword });
+    if (!error) {
+      window.$message?.success('密码修改成功');
+      // 清空表单
+      Object.assign(passwordModel, createDefaultPasswordModel());
+      passwordRestoreValidation();
+    }
+  } catch (error) {
+    window.$message?.error((error as Error).message);
+  } finally {
+    endBtnLoading();
   }
-  endBtnLoading();
 }
 </script>
 
 <template>
-  <div class="flex gap-16px">
+  <div class="flex gap-16px lt-lg:flex-col">
     <!-- 个人信息卡片 -->
-    <NCard title="个人信息" class="w-360px shadow-sm">
+    <NCard title="个人信息" class="w-360px shrink-0 shadow-sm lt-lg:w-full">
       <div class="flex-x-center flex-wrap gap-24px">
         <div class="flex-center flex-col gap-16px">
           <div class="relative">
@@ -142,7 +152,7 @@ async function updatePassword() {
 
     <!-- 基本资料卡片 -->
     <NCard title="基本资料" class="w-full overflow-x-auto shadow-sm">
-      <NTabs type="line" animated class="h-full" s>
+      <NTabs type="line" animated class="h-full">
         <NTabPane name="userInfo" tab="基本资料">
           <NForm
             ref="profileFormRef"
@@ -152,20 +162,11 @@ async function updatePassword() {
             label-width="100px"
             class="mt-16px max-w-520px"
           >
-            <NFormItem label="昵称" path="nickName">
-              <NInput v-model:value="profileModel.nickName" placeholder="请输入昵称" />
+            <NFormItem label="昵称" path="nickname">
+              <NInput v-model:value="profileModel.nickname" :disabled="btnLoading" placeholder="请输入昵称" />
             </NFormItem>
-            <NFormItem label="邮箱" path="email">
-              <NInput v-model:value="profileModel.email" placeholder="请输入邮箱" />
-            </NFormItem>
-            <NFormItem label="手机号" path="phonenumber">
-              <NInput v-model:value="profileModel.phonenumber" placeholder="请输入手机号" />
-            </NFormItem>
-            <NFormItem label="性别" path="sex">
-              <NRadioGroup v-model:value="profileModel.sex">
-                <NRadio value="0">男</NRadio>
-                <NRadio value="1">女</NRadio>
-              </NRadioGroup>
+            <NFormItem label="性别" path="gender">
+              <DictSelect v-model:value="profileModel.gender" dict-code="gender_enum" :disabled="btnLoading" />
             </NFormItem>
             <NFormItem class="flex items-center justify-end">
               <NButton class="ml-20px w-80px" type="primary" :loading="btnLoading" @click="updateProfile">
@@ -176,6 +177,11 @@ async function updatePassword() {
               </NButton>
             </NFormItem>
           </NForm>
+        </NTabPane>
+        <NTabPane name="contacts" tab="联系方式">
+          <UserContactForm kind="email" />
+          <NDivider />
+          <UserContactForm kind="phone" />
         </NTabPane>
         <NTabPane name="updatePwd" tab="修改密码">
           <NForm

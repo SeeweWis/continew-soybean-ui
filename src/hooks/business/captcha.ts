@@ -1,6 +1,7 @@
 import { computed } from 'vue';
 import { useCountDown, useLoading } from '@sa/hooks';
 import { REG_PHONE } from '@/constants/reg';
+import { fetchSmsCaptcha } from '@/service/api/auth';
 import { $t } from '@/locales';
 
 export function useCaptcha() {
@@ -42,22 +43,23 @@ export function useCaptcha() {
   async function getCaptcha(phone: string) {
     const valid = isPhoneValid(phone);
 
-    if (!valid || loading.value) {
+    if (!valid || loading.value || isCounting.value) {
       return;
     }
 
     startLoading();
+    try {
+      const { error } = await fetchSmsCaptcha(phone);
+      if (error) {
+        return;
+      }
 
-    // request
-    await new Promise(resolve => {
-      setTimeout(resolve, 500);
-    });
+      window.$message?.success?.($t('page.login.codeLogin.sendCodeSuccess'));
 
-    window.$message?.success?.($t('page.login.codeLogin.sendCodeSuccess'));
-
-    start();
-
-    endLoading();
+      start();
+    } finally {
+      endLoading();
+    }
   }
 
   return {

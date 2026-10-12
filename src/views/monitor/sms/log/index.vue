@@ -1,12 +1,12 @@
 <script setup lang="tsx">
 import { reactive, ref } from 'vue';
-import { NTag } from 'naive-ui';
 import { fetchBatchDeleteSmsLog, fetchGetSmsLogPage } from '@/service/api/system';
 import { useAppStore } from '@/store/modules/app';
 import { useAuth } from '@/hooks/business/auth';
 import { useDownload } from '@/hooks/business/download';
 import { defaultTransform, useNaivePaginatedTable } from '@/hooks/common/table';
 import { $t } from '@/locales';
+import DictTag from '@/components/custom/dict-tag.vue';
 
 defineOptions({
   name: 'SmsLog'
@@ -23,11 +23,6 @@ const searchParams = reactive<Api.System.ContinewSmsLogQuery>({
   phone: null,
   status: null
 });
-
-const statusTagMap: Record<string, 'success' | 'error'> = {
-  OK: 'success',
-  FAIL: 'error'
-};
 
 const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination, scrollX } =
   useNaivePaginatedTable({
@@ -61,12 +56,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         title: '发送状态',
         align: 'center',
         width: 90,
-        render: row =>
-          row.status ? (
-            <NTag type={statusTagMap[row.status] ?? 'default'} size="small">
-              {row.status}
-            </NTag>
-          ) : null
+        render: row => <DictTag dictCode="success_failure_status_enum" value={row.status} size="small" />
       },
       {
         key: 'resMsg',
@@ -145,12 +135,9 @@ function handleExport() {
                 />
               </NFormItemGi>
               <NFormItemGi span="24 s:12 m:8" label="发送状态" class="pr-24px">
-                <NSelect
+                <DictSelect
                   v-model:value="searchParams.status"
-                  :options="[
-                    { label: '成功', value: 'OK' },
-                    { label: '失败', value: 'FAIL' }
-                  ]"
+                  dict-code="success_failure_status_enum"
                   clearable
                 />
               </NFormItemGi>

@@ -20,18 +20,30 @@ const props = withDefaults(defineProps<Props>(), {
 
 const value = defineModel<string | number | Array<string | number> | null>('value', { required: false });
 
-const { options } = useDict(props.dictCode, props.immediate);
+const { options, loading, loadError, getData } = useDict(() => props.dictCode, props.immediate);
 </script>
 
 <template>
   <NSelect
     v-model:value="value"
     :multiple="multiple"
-    :loading="!options.length"
+    :loading="loading"
     :options="options"
     :clear-filter-after-select="false"
     v-bind="$attrs"
-  />
+  >
+    <template #empty>
+      <NSpace vertical align="center">
+        <NEmpty :description="loadError ? '选项加载失败' : '暂无选项'" />
+        <NButton v-if="loadError" size="small" :loading="loading" @click="getData">
+          <template #icon>
+            <SvgIcon icon="ic:round-refresh" />
+          </template>
+          重试
+        </NButton>
+      </NSpace>
+    </template>
+  </NSelect>
 </template>
 
 <style scoped></style>

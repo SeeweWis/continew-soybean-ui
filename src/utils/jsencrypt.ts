@@ -7,3 +7,9 @@ export const encrypt = (txt: string) => {
   encryptor.setPublicKey(publicKey!);
   return encryptor.encrypt(txt);
 };
+
+export function encryptPassword(password: string) {
+  const encrypted = encrypt(password);
+  if (!encrypted) throw new Error('密码加密失败');
+  return encrypted;
+}

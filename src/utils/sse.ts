@@ -2,7 +2,7 @@ import { watch } from 'vue';
 import { useEventSource } from '@vueuse/core';
 import { useNoticeStore } from '@/store/modules/notice';
 import { $t } from '@/locales';
-import { localStg } from './storage';
+import { getToken } from '@/store/modules/auth/shared';
 
 /**
  * 初始化 SSE
@@ -10,7 +10,7 @@ import { localStg } from './storage';
  * @param url - SSE 地址
  */
 export const initSSE = (url: string) => {
-  const token = localStg.get('token');
+  const token = getToken();
   if (import.meta.env.VITE_APP_SSE === 'N' || !token) {
     return;
   }

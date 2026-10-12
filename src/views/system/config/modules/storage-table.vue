@@ -22,8 +22,6 @@ defineOptions({
 
 const { hasAuth } = useAuth();
 
-const TYPE_OPTIONS = ['LOCAL', 'OSS_MINIO', 'OSS_ALIYUN', 'OSS_TENCENT', 'OSS_QINIU'].map(v => ({ label: v, value: v }));
-
 const { columns, columnChecks, data, getData, loading, scrollX } = useNaiveTable({
   api: () => fetchGetStorageList(),
   transform: response => response.data ?? [],
@@ -45,7 +43,7 @@ const { columns, columnChecks, data, getData, loading, scrollX } = useNaiveTable
       title: '存储类型',
       align: 'center',
       minWidth: 100,
-      render: row => <NTag type="info">{row.type}</NTag>
+      render: row => <DictTag dictCode="storage_type_enum" value={row.type} size="small" />
     },
     {
       key: 'isDefault',
@@ -59,7 +57,7 @@ const { columns, columnChecks, data, getData, loading, scrollX } = useNaiveTable
       title: '状态',
       align: 'center',
       width: 90,
-      render: row => <DictTag dictCode="dis_enable_status" value={row.status} size="small" />
+      render: row => <DictTag dictCode="dis_enable_status_enum" value={row.status} size="small" />
     },
     {
       key: 'createTime',
@@ -148,7 +146,7 @@ function createDefaultForm() {
   return {
     name: '',
     code: '',
-    type: 'LOCAL',
+    type: 1 as 1 | 2,
     accessKey: null as string | null,
     secretKey: null as string | null,
     endpoint: null as string | null,
@@ -243,7 +241,7 @@ async function handleDelete(id: CommonType.IdType) {
       v-model:show="modalVisible"
       preset="card"
       :title="operateType === 'add' ? '新增存储' : '编辑存储'"
-      class="w-620px"
+      class="max-w-90% w-620px"
     >
       <NForm :model="formModel" label-placement="left" :label-width="140">
         <NFormItem label="存储名称" required>
@@ -253,18 +251,18 @@ async function handleDelete(id: CommonType.IdType) {
           <NInput v-model:value="formModel.code" placeholder="请输入存储编码" />
         </NFormItem>
         <NFormItem label="存储类型" required>
-          <NSelect v-model:value="formModel.type" :options="TYPE_OPTIONS" />
+          <DictSelect v-model:value="formModel.type" dict-code="storage_type_enum" />
         </NFormItem>
-        <NFormItem v-if="formModel.type !== 'LOCAL'" label="访问密钥">
+        <NFormItem v-if="formModel.type === 2" label="访问密钥">
           <NInput v-model:value="formModel.accessKey" placeholder="请输入 Access Key" />
         </NFormItem>
-        <NFormItem v-if="formModel.type !== 'LOCAL' && operateType === 'add'" label="私有密钥">
+        <NFormItem v-if="formModel.type === 2 && operateType === 'add'" label="私有密钥">
           <NInput v-model:value="formModel.secretKey" type="password" placeholder="请输入 Secret Key" />
         </NFormItem>
-        <NFormItem v-if="formModel.type !== 'LOCAL'" label="终端地址">
+        <NFormItem v-if="formModel.type === 2" label="终端地址">
           <NInput v-model:value="formModel.endpoint" placeholder="请输入 Endpoint" />
         </NFormItem>
-        <NFormItem v-if="formModel.type !== 'LOCAL'" label="存储桶名称">
+        <NFormItem :label="formModel.type === 1 ? '存储路径' : '存储桶名称'" required>
           <NInput v-model:value="formModel.bucketName" placeholder="请输入 Bucket Name" />
         </NFormItem>
         <NFormItem label="自定义域名">
@@ -277,7 +275,7 @@ async function handleDelete(id: CommonType.IdType) {
           <NInputNumber v-model:value="formModel.sort" class="w-full" />
         </NFormItem>
         <NFormItem label="状态">
-          <DictRadio v-model:value="formModel.status" dict-code="dis_enable_status" />
+          <DictSelect v-model:value="formModel.status" dict-code="dis_enable_status_enum" />
         </NFormItem>
         <NFormItem label="描述">
           <NInput v-model:value="formModel.description" type="textarea" placeholder="请输入描述" />

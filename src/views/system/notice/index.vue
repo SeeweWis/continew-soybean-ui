@@ -57,6 +57,13 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         render: row => (row.type ? <DictTag size="small" dictCode="notice_type" value={row.type} /> : null)
       },
       {
+        key: 'status',
+        title: '发布状态',
+        align: 'center',
+        width: 100,
+        render: row => <DictTag size="small" dictCode="notice_status_enum" value={row.status} />
+      },
+      {
         key: 'isTop',
         title: '是否置顶',
         align: 'center',

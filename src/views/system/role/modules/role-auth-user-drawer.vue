@@ -73,7 +73,7 @@ const { columns, data, getData, loading: tableLoading, mobilePagination, scrollX
         title: '性别',
         align: 'center',
         width: 80,
-        render: row => (row.gender === undefined ? null : <DictTag dictCode="gender" value={row.gender} />)
+        render: row => (row.gender === undefined ? null : <DictTag dictCode="gender_enum" value={row.gender} />)
       },
       {
         key: 'operate',

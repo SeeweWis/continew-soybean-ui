@@ -51,7 +51,7 @@ const { columns, columnChecks, data, getData, loading, mobilePagination, scrollX
         title: '状态',
         align: 'center',
         width: 80,
-        render: row => <DictTag dictCode="dis_enable_status" value={row.status} size="small" />
+        render: row => <DictTag dictCode="dis_enable_status_enum" value={row.status} size="small" />
       },
       {
         key: 'expireTime',

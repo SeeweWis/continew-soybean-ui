@@ -1,5 +1,23 @@
 # 前后端对齐差异文档
 
+## 2026-10-10 已确认问题修复
+
+本节记录当前修复。下文是历史分析和阶段记录，其中旧 Token 字段、刷新接口及已完成状态不能作为当前契约依据。本次范围为最新分析确认的四项问题，未重新审计所有历史条目。
+
+| 优先级 | 问题 | 当前实现与契约 |
+| --- | --- | --- |
+| P0 | 登录与会话恢复 | 读取 `accessToken`，只在内存持有；`POST /auth/refresh` 携带 HttpOnly Cookie；HTTP 401 与业务码 401 共用并发刷新，每个请求最多重试一次；会话版本阻止退出或切换账号后的旧请求写回。 |
+| P1 | 个人中心 | `PATCH /user/profile/basic/info` 使用 `nickname/gender`，性别为 0 未知、1 男、2 女；密码使用 `PATCH /user/profile/password` 并 RSA 加密；头像使用 `PATCH /user/profile/avatar`，字段 `avatarFile`，保存响应 `avatar` URL。 |
+| P1 | 联系方式与验证码 | 手机、邮箱分别通过 `PATCH /user/profile/phone`、`PATCH /user/profile/email` 提交新联系方式、验证码和 RSA 加密的当前密码。发送验证码前调用 `/captcha/behavior` 获取、校验拼图，再将 `captchaVerification` 提交给 `/captcha/sms` 或 `/captcha/mail`；登录页复用此流程。 |
+| P1 | 租户管理员密码 | 用户填写并确认新密码，提交 `PUT /tenant/management/{id}/admin/pwd`，请求字段为 RSA 加密的 `password`；操作权限为 `tenant:management:updateAdminUserPwd`。 |
+| P2 | 邮箱登录路由 | 在 `build/plugins/router.ts` 中登记 `email-login`，构建生成的路由、转换和类型声明保留该入口。 |
+
+开发 Cookie 来源白名单增加 `http://localhost:9527`。后端需加载更新后的 dev 配置；生产环境仍须配置真实前端 Origin，不使用通配符放行刷新 Cookie。
+
+回归检查 `tests/auth-session.browser.mjs` 对运行中的 `pnpm dev` 使用模拟 API，不发送真实短信、邮件，也不修改真实账号。测试需要已有 Playwright 和 Chromium；可通过 `PLAYWRIGHT_MODULE` 指定已安装 Playwright 模块路径，`BROWSER_EXECUTABLE` 指定本机浏览器，然后执行 `node tests/auth-session.browser.mjs`。`TEST_BASE_URL` 可覆盖默认 `http://localhost:9527`。
+
+静态检查与模拟浏览器验证不能替代真实账号、短信/邮件服务和生产 Cookie 部署联调。
+
 ## 1. 文档信息
 
 | 项目          | 当前值                                                                                       |
@@ -729,3 +747,47 @@ refresh_expire_in;
 - **偶现 502**：联调期间后端多次出现持续数十秒的 502 窗口（疑似 IDEA devtools 热重启或远程连接抖动），与用户反馈"偶现超时"同源。
 - **前端缓解**：axios 默认超时由 10s 放宽到 30s（packages/axios/src/options.ts），消除偶现 10000ms 中断。
 - **建议**：后端改 Run 模式（非 Debug）启动；评估将 MySQL/Redis 迁至本地或同机房；检查 p6spy 是否生产必需。
+
+## 17. 枚举展示与下拉框排查（2026-10-11）
+
+本节以当前后端源码为准，替代 16.2 中通过新增同名数据库字典补偿枚举的做法。`DictItemServiceImpl.init()` 已将项目内 `BaseEnum` 注册为完整类名的 snake_case 编码，因此应请求 `gender_enum`，而不是 `gender`。本轮没有修改数据库，也没有新增 SQL 变更集。
+
+### 17.1 逐页结果
+
+| 页面或组件 | 发现与修复 |
+| --- | --- |
+| 用户列表、搜索、新增/编辑 | 性别和启用状态改为 `gender_enum`、`dis_enable_status_enum`；编辑表单用下拉框并保留数值 0/1/2 |
+| 个人中心 | 性别改用 `DictSelect`，数值提交契约不变 |
+| 用户导入 | 补齐重复用户/邮箱/手机号策略和默认状态下拉框；对接 `/system/user/import/parse`、`/system/user/import` 及 `/system/user/import/template`，解析后再确认导入 |
+| 部门列表、搜索、新增/编辑 | 统一状态字典编码，搜索和编辑均使用下拉框 |
+| 角色列表、授权用户、数据范围 | 统一性别、数据范围字典编码；自定义范围保持数值 5 及部门选择条件 |
+| 菜单列表、新增/编辑 | 菜单类型和状态改用枚举字典；类型选择使用下拉框，目录/菜单/按钮仍为数值 1/2/3 |
+| 字典列表、字典项搜索、新增/编辑 | 状态改用 `dis_enable_status_enum` 下拉框和标签 |
+| 文件列表、搜索 | 文件类型改用 `file_type_enum`；移除类型自由输入，改为下拉筛选 |
+| 客户端配置列表、新增/编辑 | 认证方式、顶人范围、溢出下线方式补齐枚举下拉框；删除无效 `REFUSE` 选项；刷新传输方式使用 `COOKIE`/`BODY`；新增表单重置选项，编辑正确保存目标 ID |
+| 存储配置列表、新增/编辑 | 类型改为数值 1/2 的 `storage_type_enum`；切换类型正确显示本地路径或对象存储字段；状态使用下拉框 |
+| 短信配置列表、新增/编辑 | 供应商保留数据库字典 `sms_supplier`；状态使用枚举下拉框 |
+| 系统日志列表、筛选、详情 | 成功/失败使用 `log_status_enum` 下拉框和标签 |
+| 短信日志列表、筛选 | 删除 `OK`/`FAIL` 字符串选项，使用数值 1/2 的 `success_failure_status_enum` |
+| 公告列表、搜索、发布/编辑、详情 | 分类保留 `notice_type`；范围改为数值 1/2，补齐通知用户多选及非空校验、通知方式多选；列表和详情增加发布状态标签 |
+| 租户管理列表、新增/编辑 | 状态使用 `dis_enable_status_enum` 下拉框和标签 |
+| 租户套餐列表、搜索、新增/编辑 | 删除搜索内的重复硬编码状态选项，统一使用枚举下拉框 |
+| 登录、邮件、密码配置表单 | `LOGIN_CAPTCHA_ENABLED`、`MAIL_SSL_ENABLED`、`PASSWORD_ALLOW_CONTAIN_USERNAME`、`PASSWORD_REQUIRE_SYMBOLS` 使用“是/否”下拉框，提交仍为字符串 `1`/`0` |
+
+### 17.2 共享组件与契约
+
+- `useDict` 和 Pinia 字典 Store 合并同编码请求，响应更新后所有选择器和标签同步更新；空数组正常缓存，失败请求允许重试。
+- `DictSelect` 使用真实请求 loading，区分空选项与加载失败，提供重试；`dictCode` 变化时重新加载。
+- `UserSelect` 显式支持多选模型，公告通知用户提交字符串 ID 数组。
+- 当前页面使用的枚举编码为 `gender_enum`、`dis_enable_status_enum`、`menu_type_enum`、`data_scope_enum`、`file_type_enum`、`storage_type_enum`、`auth_type_enum`、`logout_mode_enum`、`replaced_range_enum`、`log_status_enum`、`success_failure_status_enum`、`notice_scope_enum`、`notice_method_enum`、`notice_status_enum`、`import_policy_enum`。
+- 数据库字典 `notice_type`、`client_type`、`sms_supplier` 保留原编码；客户端刷新传输方式来自 Starter，未假设存在对应项目字典。
+- 调度、代码生成页面仍为原有占位入口；未为尚未实现的字段虚构枚举表单。消息演示和上传进度没有对应可编辑枚举字段。
+
+### 17.3 验证与限制
+
+- 已运行前端 `pnpm typecheck`、`pnpm build`；受影响目录/文件执行不带 `--fix` 的 Oxlint 和 Vue ESLint。
+- `tests/dictionary.browser.mjs` 覆盖数值 0、同编码请求合并、缓存更新、编码切换、空选项、失败和重试。
+- `tests/enum-forms.browser.mjs` 在真实组件上模拟 API，检查用户/客户端编辑回填、菜单/角色条件字段、短信状态展示/筛选、存储、公告、布尔参数及导入策略和失败重试；不操作真实数据库。
+- 存储表单完成桌面/移动端截图核对，导入表单完成移动端截图核对；客户端和存储弹窗沿用组件库并限制移动端宽度。
+- 图谱 MCP 的项目/覆盖查询、索引刷新及影响检测均因 `Transport closed` 无法完成。使用 `rg` 和源码读取核对前端消费者、API 类型以及后端枚举、Controller、DTO 和字典注册逻辑，不声称已取得图谱覆盖度。
+- 未执行真实登录会话下的接口与 Excel 集成导入；直接请求受保护枚举接口返回 401。`frontend-spec` 技能未安装，按现有 Vue/Naive UI、类型和构建约定实施。

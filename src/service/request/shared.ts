@@ -1,9 +1,10 @@
 import { useAuthStore } from '@/store/modules/auth';
-import { localStg } from '@/utils/storage';
+import { fetchRefreshToken } from '@/service/api/auth';
+import { getToken, getSessionVersion, setAccessSession } from '@/store/modules/auth/shared';
 import type { RequestInstanceState } from './type';
 
 export function getAuthorization() {
-  const token = localStg.get('token');
+  const token = getToken();
   const Authorization = token ? `Bearer ${token}` : null;
 
   return Authorization;
@@ -11,18 +12,14 @@ export function getAuthorization() {
 
 /** refresh token */
 async function handleRefreshToken() {
-  const { resetStore } = useAuthStore();
-
-  // const rToken = localStg.get('refreshToken') || '';
-  // const { error, data } = await fetchRefreshToken(rToken);
-  // if (!error) {
-  //   localStg.set('token', data.token);
-  //   localStg.set('refreshToken', data.refreshToken);
-  //   return true;
-  // }
-
-  resetStore();
-
+  const version = getSessionVersion();
+  const { data, error } = await fetchRefreshToken();
+  if (version !== getSessionVersion()) return false;
+  if (!error && data?.accessToken) {
+    setAccessSession(data);
+    return true;
+  }
+  if (getToken()) void useAuthStore().resetStore();
   return false;
 }
 
@@ -31,13 +28,12 @@ export async function handleExpiredRequest(state: RequestInstanceState) {
     state.refreshTokenPromise = handleRefreshToken();
   }
 
-  const success = await state.refreshTokenPromise;
-
-  setTimeout(() => {
-    state.refreshTokenPromise = null;
-  }, 1000);
-
-  return success;
+  const pending = state.refreshTokenPromise;
+  try {
+    return await pending;
+  } finally {
+    if (state.refreshTokenPromise === pending) state.refreshTokenPromise = null;
+  }
 }
 
 export function showErrorMsg(state: RequestInstanceState, message: string) {

@@ -52,12 +52,11 @@ type Model = {
   password: string;
   email: string;
   phone: string;
-  /** 字典项值为字符串，提交时转为后端数字枚举 */
-  gender: string;
+  gender: Api.System.ContinewUser['gender'];
   deptId: CommonType.IdType | null;
   roleIds: CommonType.IdType[];
   description: string;
-  status: string;
+  status: Api.System.ContinewUserStatus;
 };
 
 const model = ref<Model>(createDefaultModel());
@@ -71,10 +70,10 @@ function createDefaultModel(): Model {
     nickname: '',
     email: '',
     phone: '',
-    gender: '0',
+    gender: 0,
     deptId: null,
     password: '',
-    status: '1',
+    status: 1,
     roleIds: [],
     description: ''
   };
@@ -111,9 +110,8 @@ function handleUpdateModelWhenEdit() {
 
   if (props.operateType === 'edit' && props.rowData) {
     Object.assign(model.value, jsonClone(props.rowData));
-    // 字典项值为字符串，与后端数字枚举互转
-    model.value.gender = String(props.rowData.gender ?? 0);
-    model.value.status = String(props.rowData.status ?? 1);
+    model.value.gender = props.rowData.gender ?? 0;
+    model.value.status = props.rowData.status ?? 1;
     model.value.password = '';
   }
 }
@@ -132,11 +130,11 @@ async function handleSubmit() {
     nickname,
     email,
     phone,
-    gender: Number(gender) as Api.System.ContinewUser['gender'],
+    gender,
     deptId: deptId!,
     roleIds: roleIds ?? [],
     description,
-    status: Number(status) as Api.System.ContinewUserStatus
+    status
   };
 
   // request
@@ -202,9 +200,9 @@ watch(visible, () => {
             />
           </NFormItem>
           <NFormItem :label="$t('page.system.user.sex')" path="gender">
-            <DictRadio
+            <DictSelect
               v-model:value="model.gender"
-              dict-code="gender"
+              dict-code="gender_enum"
               :placeholder="$t('page.system.user.form.sex.required')"
             />
           </NFormItem>
@@ -219,7 +217,7 @@ watch(visible, () => {
             />
           </NFormItem>
           <NFormItem :label="$t('page.system.user.status')" path="status">
-            <DictRadio v-model:value="model.status" dict-code="dis_enable_status" />
+            <DictSelect v-model:value="model.status" dict-code="dis_enable_status_enum" />
           </NFormItem>
           <NFormItem :label="$t('page.system.user.remark')" path="description">
             <NInput v-model:value="model.description" :placeholder="$t('page.system.user.form.remark.required')" />

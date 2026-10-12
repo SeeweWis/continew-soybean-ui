@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { h, ref, watch } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import type { UploadFileInfo } from 'naive-ui';
-import { getToken } from '@/store/modules/auth/shared';
+import { useLoading } from '@sa/hooks';
+import { fetchImportUsers, fetchParseUserImport } from '@/service/api/system';
 import { useDownload } from '@/hooks/business/download';
-import { getServiceBaseURL } from '@/utils/service';
-import type FileUpload from '@/components/custom/file-upload.vue';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -17,16 +16,10 @@ interface Emits {
 
 const { download } = useDownload();
 
-const { baseURL } = getServiceBaseURL(import.meta.env);
-
-const headers: Record<string, string> = {
-  Authorization: `Bearer ${getToken()}`,
-  clientid: import.meta.env.VITE_APP_CLIENT_ID!
-};
-
 const emit = defineEmits<Emits>();
 
-const uploadRef = ref<typeof FileUpload>();
+const { loading, startLoading, endLoading } = useLoading();
+const parsed = ref<Api.System.UserImportParseResp | null>(null);
 const message = ref<string>('');
 const success = ref<boolean>(false);
 
@@ -34,8 +27,12 @@ const visible = defineModel<boolean>('visible', {
   default: false
 });
 
-const data = ref<Record<string, any>>({
-  updateSupport: false
+const data = reactive<Api.System.UserImportReq>({
+  importKey: '',
+  duplicateUser: 1,
+  duplicateEmail: 1,
+  duplicatePhone: 1,
+  defaultStatus: 1
 });
 
 const fileList = ref<UploadFileInfo[]>([]);
@@ -48,42 +45,37 @@ function closeDrawer() {
 }
 
 async function handleSubmit() {
-  fileList.value.forEach(item => {
-    item.status = 'pending';
-  });
-  uploadRef.value?.submit();
-}
-
-function isErrorState(xhr: XMLHttpRequest) {
-  const responseText = xhr?.responseText;
-  const response = JSON.parse(responseText);
-  return response.code !== 200;
-}
-
-function handleFinish(options: { file: UploadFileInfo; event?: ProgressEvent }) {
-  const { file, event } = options;
-  // @ts-expect-error Ignore type errors
-  const responseText = event?.target?.responseText;
-  const response = JSON.parse(responseText);
-  message.value = response.msg;
-  window.$message?.success($t('common.importSuccess'));
-  success.value = true;
-  return file;
-}
-
-function handleError(options: { file: UploadFileInfo; event?: ProgressEvent }) {
-  const { event } = options;
-  // @ts-expect-error Ignore type errors
-  const responseText = event?.target?.responseText;
-  const msg = JSON.parse(responseText).msg;
-  message.value = msg;
-  window.$message?.error(() => h('div', { innerHTML: msg || $t('common.importFail') }));
-  success.value = false;
+  if (loading.value) return;
+  const file = fileList.value[0]?.file;
+  if (!file) {
+    window.$message?.warning('请选择导入文件');
+    return;
+  }
+  startLoading();
+  try {
+    if (!parsed.value) {
+      const { data: result, error } = await fetchParseUserImport(file);
+      if (error) return;
+      parsed.value = result;
+      data.importKey = result.importKey;
+    } else {
+      const { data: result, error } = await fetchImportUsers(data);
+      if (error) return;
+      message.value = `总计 ${result.totalRows} 行，新增 ${result.insertRows} 行，修改 ${result.updateRows} 行`;
+      success.value = true;
+      parsed.value = null;
+      data.importKey = '';
+      fileList.value = [];
+      window.$message?.success($t('common.importSuccess'));
+    }
+  } finally {
+    endLoading();
+  }
 }
 
 function handleDownloadTemplate() {
   download(
-    '/system/user/importTemplate',
+    '/system/user/import/template',
     {},
     `${$t('page.system.user.title')}_${$t('common.importTemplate')}_${new Date().getTime()}.xlsx`
   );
@@ -91,11 +83,17 @@ function handleDownloadTemplate() {
 
 watch(visible, () => {
   if (visible.value) {
-    data.value.updateSupport = false;
+    Object.assign(data, { importKey: '', duplicateUser: 1, duplicateEmail: 1, duplicatePhone: 1, defaultStatus: 1 });
+    parsed.value = null;
     fileList.value = [];
     success.value = false;
     message.value = '';
   }
+});
+
+watch(fileList, () => {
+  parsed.value = null;
+  data.importKey = '';
 });
 </script>
 
@@ -110,11 +108,8 @@ watch(visible, () => {
     @close="closeDrawer"
   >
     <NUpload
-      ref="uploadRef"
       v-model:file-list="fileList"
-      :action="`${baseURL}/system/user/importData`"
-      :headers="headers"
-      :data="data"
+      :disabled="loading"
       :max="1"
       :file-size="50"
       accept=".xls,.xlsx"
@@ -122,9 +117,6 @@ watch(visible, () => {
       directory-dnd
       :default-upload="false"
       list-type="text"
-      :is-error-state="isErrorState"
-      @finish="handleFinish"
-      @error="handleError"
     >
       <NUploadDragger>
         <div class="mb-12px flex-center">
@@ -140,20 +132,39 @@ watch(visible, () => {
         </NP>
       </NUploadDragger>
     </NUpload>
-    <div class="flex-center">
-      <NCheckbox v-model:checked="data.updateSupport">{{ $t('common.updateExisting') }}</NCheckbox>
-    </div>
+    <NForm label-placement="left" :label-width="120" class="mt-16px">
+      <NFormItem label="重复用户策略">
+        <DictSelect v-model:value="data.duplicateUser" dict-code="import_policy_enum" :disabled="loading" />
+      </NFormItem>
+      <NFormItem label="重复邮箱策略">
+        <DictSelect v-model:value="data.duplicateEmail" dict-code="import_policy_enum" :disabled="loading" />
+      </NFormItem>
+      <NFormItem label="重复手机号策略">
+        <DictSelect v-model:value="data.duplicatePhone" dict-code="import_policy_enum" :disabled="loading" />
+      </NFormItem>
+      <NFormItem label="默认用户状态">
+        <DictSelect v-model:value="data.defaultStatus" dict-code="dis_enable_status_enum" :disabled="loading" />
+      </NFormItem>
+    </NForm>
+    <NDescriptions v-if="parsed" :column="2" label-placement="left" bordered size="small">
+      <NDescriptionsItem label="总行数">{{ parsed.totalRows }}</NDescriptionsItem>
+      <NDescriptionsItem label="有效行数">{{ parsed.validRows }}</NDescriptionsItem>
+      <NDescriptionsItem label="重复用户">{{ parsed.duplicateUserRows }}</NDescriptionsItem>
+      <NDescriptionsItem label="重复邮箱">{{ parsed.duplicateEmailRows }}</NDescriptionsItem>
+      <NDescriptionsItem label="重复手机号">{{ parsed.duplicatePhoneRows }}</NDescriptionsItem>
+    </NDescriptions>
 
     <NAlert v-if="message" :title="$t('common.importResult')" :type="success ? 'success' : 'error'" :bordered="false">
       <NScrollbar class="max-h-200px">
-        <!-- eslint-disable-next-line vue/no-v-html -->
-        <span v-html="message" />
+        <span>{{ message }}</span>
       </NScrollbar>
     </NAlert>
     <template #footer>
       <NSpace justify="end" :size="16">
         <NButton @click="handleDownloadTemplate">{{ $t('common.downloadTemplate') }}</NButton>
-        <NButton type="primary" @click="handleSubmit">{{ $t('common.import') }}</NButton>
+        <NButton type="primary" :loading="loading" :disabled="!fileList.length" @click="handleSubmit">
+          {{ parsed ? '确认导入' : '解析文件' }}
+        </NButton>
       </NSpace>
     </template>
   </NModal>

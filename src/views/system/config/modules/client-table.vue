@@ -1,6 +1,6 @@
 <script setup lang="tsx">
 import { reactive, ref } from 'vue';
-import { NDivider, NTag } from 'naive-ui';
+import { NDivider } from 'naive-ui';
 import { jsonClone } from '@sa/utils';
 import { useBoolean } from '@sa/hooks';
 import { fetchBatchDeleteClient, fetchCreateClient, fetchGetClientPage, fetchUpdateClient } from '@/service/api/system';
@@ -16,10 +16,9 @@ defineOptions({
 
 const { hasAuth } = useAuth();
 
-const AUTH_TYPE_OPTIONS = ['ACCOUNT', 'EMAIL', 'PHONE', 'SOCIAL'].map(v => ({ label: v, value: v }));
-const OVERFLOW_LOGOUT_OPTIONS = [
-  { label: '登出会话', value: 'LOGOUT' },
-  { label: '拒绝登录', value: 'REFUSE' }
+const REFRESH_TOKEN_MODE_OPTIONS = [
+  { label: 'Cookie', value: 'COOKIE' },
+  { label: '响应体', value: 'BODY' }
 ];
 
 const searchParams = ref<Api.System.ContinewClientQuery>({
@@ -62,15 +61,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         title: '认证类型',
         align: 'center',
         minWidth: 160,
-        render: row => (
-          <div class="flex justify-center gap-4px">
-            {(row.authType || []).map(t => (
-              <NTag key={t} size="small">
-                {t}
-              </NTag>
-            ))}
-          </div>
-        )
+        render: row => <DictTag size="small" dictCode="auth_type_enum" value={row.authType} />
       },
       {
         key: 'activeTimeout',
@@ -89,7 +80,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         title: '状态',
         align: 'center',
         width: 80,
-        render: row => <DictTag dictCode="dis_enable_status" value={row.status} size="small" />
+        render: row => <DictTag dictCode="dis_enable_status_enum" value={row.status} size="small" />
       },
       {
         key: 'operate',
@@ -147,8 +138,10 @@ function createDefaultForm() {
     authType: ['ACCOUNT'] as string[],
     activeTimeout: 1800,
     timeout: 86400,
+    refreshTokenTimeout: 2592000,
+    refreshTokenMode: 'COOKIE' as 'COOKIE' | 'BODY',
     isConcurrent: true,
-    replacedRange: undefined as string | undefined,
+    replacedRange: 'CURR_DEVICE_TYPE',
     maxLoginCount: 1,
     overflowLogoutMode: 'LOGOUT' as string,
     status: 1 as 1 | 2
@@ -158,13 +151,22 @@ function createDefaultForm() {
 function openEdit(id: CommonType.IdType) {
   const row = data.value.find(item => item.id === id);
   if (!row) return;
-  Object.assign(formModel, jsonClone({ ...row, id: undefined }));
+  Object.assign(formModel, createDefaultForm(), jsonClone({ ...row, id: undefined }));
+  editingData.value = row;
   operateType.value = 'edit';
   drawerVisible.value = true;
 }
 
+function openAdd() {
+  Object.assign(formModel, createDefaultForm());
+  handleAdd();
+}
+
 async function handleSubmit() {
-  const payload: Api.System.ContinewClientReq = { ...formModel, replacedRange: formModel.replacedRange ?? undefined };
+  const payload: Api.System.ContinewClientReq = {
+    ...formModel,
+    replacedRange: formModel.isConcurrent ? undefined : formModel.replacedRange
+  };
   drawerSubmitting.value = true;
   if (operateType.value === 'add') {
     const { error } = await fetchCreateClient(payload);
@@ -211,7 +213,7 @@ function handleResetSearch() {
                 <DictSelect v-model:value="searchParams.clientType" dict-code="client_type" clearable />
               </NFormItemGi>
               <NFormItemGi span="24 s:12 m:8" label="状态" class="pr-24px">
-                <DictSelect v-model:value="searchParams.status" dict-code="dis_enable_status" clearable />
+                <DictSelect v-model:value="searchParams.status" dict-code="dis_enable_status_enum" clearable />
               </NFormItemGi>
               <NFormItemGi span="24 s:12 m:8" class="pr-24px">
                 <NSpace class="w-full" justify="end">
@@ -242,7 +244,7 @@ function handleResetSearch() {
           :loading="loading"
           :show-add="hasAuth('system:client:create')"
           :show-delete="hasAuth('system:client:delete')"
-          @add="handleAdd"
+          @add="openAdd"
           @delete="handleBatchDelete"
           @refresh="getData"
         />
@@ -265,14 +267,14 @@ function handleResetSearch() {
       v-model:show="drawerVisible"
       preset="card"
       :title="operateType === 'add' ? '新增客户端' : '编辑客户端'"
-      class="w-620px"
+      class="max-w-90% w-620px"
     >
       <NForm :model="formModel" label-placement="left" :label-width="120">
         <NFormItem label="客户端类型" required>
           <DictSelect v-model:value="formModel.clientType" dict-code="client_type" />
         </NFormItem>
         <NFormItem label="认证类型" required>
-          <NSelect v-model:value="formModel.authType" multiple :options="AUTH_TYPE_OPTIONS" />
+          <DictSelect v-model:value="formModel.authType" dict-code="auth_type_enum" multiple />
         </NFormItem>
         <NFormItem label="活跃超时（秒）" required>
           <NInputNumber v-model:value="formModel.activeTimeout" class="w-full" :min="1" />
@@ -280,17 +282,26 @@ function handleResetSearch() {
         <NFormItem label="会话超时（秒）" required>
           <NInputNumber v-model:value="formModel.timeout" class="w-full" :min="1" />
         </NFormItem>
+        <NFormItem label="刷新有效期（秒）" required>
+          <NInputNumber v-model:value="formModel.refreshTokenTimeout" class="w-full" :min="60" :max="315360000" />
+        </NFormItem>
+        <NFormItem label="刷新令牌传输方式" required>
+          <NSelect v-model:value="formModel.refreshTokenMode" :options="REFRESH_TOKEN_MODE_OPTIONS" />
+        </NFormItem>
         <NFormItem label="允许并发登录" required>
           <NSwitch v-model:value="formModel.isConcurrent" />
+        </NFormItem>
+        <NFormItem v-if="!formModel.isConcurrent" label="顶人下线范围" required>
+          <DictSelect v-model:value="formModel.replacedRange" dict-code="replaced_range_enum" />
         </NFormItem>
         <NFormItem label="最大登录数" required>
           <NInputNumber v-model:value="formModel.maxLoginCount" class="w-full" :min="1" />
         </NFormItem>
         <NFormItem label="溢出处理">
-          <NSelect v-model:value="formModel.overflowLogoutMode" :options="OVERFLOW_LOGOUT_OPTIONS" />
+          <DictSelect v-model:value="formModel.overflowLogoutMode" dict-code="logout_mode_enum" />
         </NFormItem>
         <NFormItem label="状态">
-          <DictRadio v-model:value="formModel.status" dict-code="dis_enable_status" />
+          <DictSelect v-model:value="formModel.status" dict-code="dis_enable_status_enum" />
         </NFormItem>
       </NForm>
       <template #footer>

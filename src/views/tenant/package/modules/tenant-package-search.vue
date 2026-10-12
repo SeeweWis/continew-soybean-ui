@@ -46,12 +46,9 @@ async function search() {
               <NInput v-model:value="model.description" placeholder="请输入套餐名称" @keyup.enter="search" />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:8" label="状态" path="status" class="pr-24px">
-              <NSelect
+              <DictSelect
                 v-model:value="model.status"
-                :options="[
-                  { label: '启用', value: 1 },
-                  { label: '禁用', value: 2 }
-                ]"
+                dict-code="dis_enable_status_enum"
                 clearable
               />
             </NFormItemGi>

@@ -25,7 +25,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const TAG_TYPES = ['default', 'primary', 'info', 'success', 'warning', 'error'] as const;
 
-const { transformDictData } = useDict(props.dictCode, props.immediate);
+const { transformDictData } = useDict(() => props.dictCode, props.immediate);
 
 const dictTagData = computed<Api.System.LabelValue[]>(() => {
   if (props.dictData) {

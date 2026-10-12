@@ -9,12 +9,13 @@ defineOptions({
 });
 
 interface Props {
+  multiple?: boolean;
   [key: string]: any;
 }
 
 defineProps<Props>();
 
-const value = defineModel<CommonType.IdType | null>('value', { required: false });
+const value = defineModel<CommonType.IdType | CommonType.IdType[] | null>('value', { required: false });
 
 const { loading: userLoading, startLoading: startUserLoading, endLoading: endUserLoading } = useLoading();
 
@@ -40,6 +41,7 @@ getUserOptions();
 <template>
   <NSelect
     v-model:value="value"
+    :multiple="multiple"
     :loading="userLoading"
     :options="userOptions"
     v-bind="$attrs"

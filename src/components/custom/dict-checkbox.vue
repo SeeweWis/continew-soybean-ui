@@ -14,7 +14,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const value = defineModel<string[]>('value', { required: false });
 
-const { options } = useDict(props.dictCode, props.immediate);
+const { options } = useDict(() => props.dictCode, props.immediate);
 </script>
 
 <template>

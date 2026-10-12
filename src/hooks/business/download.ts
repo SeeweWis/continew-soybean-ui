@@ -1,6 +1,6 @@
 import StreamSaver from 'streamsaver';
 import { errorCodeRecord } from '@/constants/common';
-import { localStg } from '@/utils/storage';
+import { getToken } from '@/store/modules/auth/shared';
 import { getServiceBaseURL } from '@/utils/service';
 import { transformToURLSearchParams } from '@/utils/common';
 
@@ -24,7 +24,7 @@ export function useDownload() {
 
   /** 获取通用请求头 */
   const getCommonHeaders = (contentType = 'application/octet-stream') => ({
-    Authorization: `Bearer ${localStg.get('token')}`,
+    Authorization: `Bearer ${getToken()}`,
     Clientid: import.meta.env.VITE_APP_CLIENT_ID!,
     'Content-Type': contentType
   });

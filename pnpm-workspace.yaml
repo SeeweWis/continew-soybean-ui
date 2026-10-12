@@ -1,6 +1,9 @@
 packages:
   - 'packages/*'
 allowBuilds:
+  '@vue-office/docx': true
+  '@vue-office/excel': true
+  '@vue-office/pdf': true
   '@parcel/watcher': false
   es5-ext: true
   esbuild: false
