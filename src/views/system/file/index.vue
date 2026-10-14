@@ -201,11 +201,12 @@ onBeforeUnmount(() => { sequence += 1; });
           block
           :secondary="selectedType === item.value"
           :quaternary="selectedType !== item.value"
+          :theme-overrides="{ iconSizeMedium: '32px' }"
           :type="selectedType === item.value ? 'primary' : 'default'"
           :aria-current="selectedType === item.value ? 'page' : undefined"
           @click="selectCategory(item.value)"
         >
-          <template #icon><img :src="fileIconUrl(item.icon)" alt="" width="24" height="24" /></template>
+          <template #icon><img :src="fileIconUrl(item.icon)" alt="" width="32" height="32" /></template>
           {{ item.label }}
         </NButton>
       </nav>

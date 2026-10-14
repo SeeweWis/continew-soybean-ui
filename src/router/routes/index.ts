@@ -17,6 +17,9 @@ export function createStaticRoutes() {
   const authRoutes: ElegantRoute[] = [];
 
   [...customRoutes, ...generatedRoutes].forEach(item => {
+    // The route store injects the local workbench in both auth modes.
+    if (item.name === 'home' || item.name === 'workbench') return;
+
     if (item.meta?.constant) {
       constantRoutes.push(item);
     } else {
@@ -32,15 +35,40 @@ export function createStaticRoutes() {
 
 const dynamicConstantRoutes: ElegantRoute[] = [
   {
-    name: 'home',
-    path: '/home',
-    component: 'layout.base$view.home',
+    name: 'workbench',
+    path: '/workbench',
+    component: 'layout.base',
+    redirect: '/home',
     meta: {
-      title: 'home',
-      i18nKey: 'route.home',
+      title: '工作台',
+      i18nKey: 'route.workbench',
       icon: 'mdi:monitor-dashboard',
       order: -1
-    }
+    },
+    children: [
+      {
+        name: 'workbench_home',
+        path: '/home',
+        component: 'view.workbench_home',
+        meta: {
+          title: '首页',
+          i18nKey: 'route.workbench_home',
+          icon: 'mdi:home-outline',
+          order: 0
+        }
+      },
+      {
+        name: 'workbench_charts',
+        path: '/workbench/charts',
+        component: 'view.workbench_charts',
+        meta: {
+          title: '仪表盘',
+          i18nKey: 'route.workbench_charts',
+          icon: 'mdi:chart-box-outline',
+          order: 1
+        }
+      }
+    ]
   },
   {
     name: '403',

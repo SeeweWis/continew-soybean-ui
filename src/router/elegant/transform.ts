@@ -209,7 +209,10 @@ const routeMap: RouteMap = {
   "tenant": "/tenant",
   "tenant_management": "/tenant/management",
   "tenant_package": "/tenant/package",
-  "user-center": "/user-center"
+  "user-center": "/user-center",
+  "workbench": "/workbench",
+  "workbench_charts": "/workbench/charts",
+  "workbench_home": "/home"
 };
 
 /**

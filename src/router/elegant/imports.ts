@@ -51,4 +51,6 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   system_user: () => import("@/views/system/user/index.vue"),
   tenant_management: () => import("@/views/tenant/management/index.vue"),
   tenant_package: () => import("@/views/tenant/package/index.vue"),
+  workbench_charts: () => import("@/views/workbench/charts/index.vue"),
+  workbench_home: () => import("@/views/workbench/home/index.vue"),
 };

@@ -4,6 +4,7 @@ import { defineStore } from 'pinia';
 import { useBoolean } from '@sa/hooks';
 import { router } from '@/router';
 import { localStg } from '@/utils/storage';
+import { resolveSiteImage } from '@/utils/site';
 import { SetupStoreId } from '@/enum';
 import { $t, setLocale } from '@/locales';
 import { setDayjsLocale } from '@/locales/dayjs';
@@ -60,13 +61,13 @@ export const useAppStore = defineStore(SetupStoreId.App, () => {
   const siteBeian = ref('');
 
   function setSiteConfig(config: Record<string, string>) {
-    siteLogo.value = config.SITE_LOGO && config.SITE_LOGO !== '/logo.svg' ? config.SITE_LOGO : defaultLogo;
+    siteLogo.value = resolveSiteImage('SITE_LOGO', config.SITE_LOGO);
     siteTitle.value = config.SITE_TITLE || $t('system.title');
-    siteFavicon.value = config.SITE_FAVICON || '';
+    siteFavicon.value = resolveSiteImage('SITE_FAVICON', config.SITE_FAVICON);
     siteCopyright.value = config.SITE_COPYRIGHT || '';
     siteBeian.value = config.SITE_BEIAN || '';
     document.title = siteTitle.value;
-    document.querySelector<HTMLLinkElement>('link[rel="icon"]')?.setAttribute('href', siteFavicon.value || '/favicon.svg');
+    document.querySelector<HTMLLinkElement>('link[rel="icon"]')?.setAttribute('href', siteFavicon.value);
   }
 
   async function initSiteConfig() {

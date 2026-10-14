@@ -436,5 +436,34 @@ export const generatedRoutes: GeneratedRoute[] = [
       icon: 'material-symbols:account-circle-full',
       hideInMenu: true
     }
+  },
+  {
+    name: 'workbench',
+    path: '/workbench',
+    component: 'layout.base',
+    meta: {
+      title: 'workbench',
+      i18nKey: 'route.workbench'
+    },
+    children: [
+      {
+        name: 'workbench_charts',
+        path: '/workbench/charts',
+        component: 'view.workbench_charts',
+        meta: {
+          title: 'workbench_charts',
+          i18nKey: 'route.workbench_charts'
+        }
+      },
+      {
+        name: 'workbench_home',
+        path: '/home',
+        component: 'view.workbench_home',
+        meta: {
+          title: 'workbench_home',
+          i18nKey: 'route.workbench_home'
+        }
+      }
+    ]
   }
 ];

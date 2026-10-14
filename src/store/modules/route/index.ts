@@ -39,7 +39,7 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
   const authRouteMode = ref(import.meta.env.VITE_AUTH_ROUTE_MODE);
 
   /** Home route key */
-  const routeHome = ref(import.meta.env.VITE_ROUTE_HOME || 'home');
+  const routeHome = ref(import.meta.env.VITE_ROUTE_HOME || 'workbench_home');
 
   /** constant routes */
   const constantRoutes = shallowRef<ElegantConstRoute[]>([]);

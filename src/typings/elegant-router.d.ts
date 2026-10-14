@@ -64,6 +64,9 @@ declare module "@elegant-router/types" {
     "tenant_management": "/tenant/management";
     "tenant_package": "/tenant/package";
     "user-center": "/user-center";
+    "workbench": "/workbench";
+    "workbench_charts": "/workbench/charts";
+    "workbench_home": "/home";
   };
 
   /**
@@ -114,6 +117,7 @@ declare module "@elegant-router/types" {
     | "system"
     | "tenant"
     | "user-center"
+    | "workbench"
   >;
 
   /**
@@ -167,6 +171,8 @@ declare module "@elegant-router/types" {
     | "system_user"
     | "tenant_management"
     | "tenant_package"
+    | "workbench_charts"
+    | "workbench_home"
   >;
 
   /**

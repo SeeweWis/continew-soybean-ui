@@ -5,6 +5,7 @@ import { useLoading } from '@sa/hooks';
 import { fetchGetOptionList, fetchResetOptionValue, fetchUpdateOptions } from '@/service/api/system';
 import { useAuth } from '@/hooks/business/auth';
 import { useAppStore } from '@/store/modules/app';
+import { resolveSiteImage } from '@/utils/site';
 import { $t } from '@/locales';
 
 defineOptions({ name: 'SiteConfig' });
@@ -140,7 +141,7 @@ onMounted(getOptions);
       <NFormItem :label="getOption('SITE_LOGO')?.name || '系统 LOGO'">
         <div class="flex-y-center gap-16px">
           <div class="brand-preview logo-preview">
-            <img v-if="formModel.SITE_LOGO" :src="formModel.SITE_LOGO" alt="系统 Logo 预览" />
+            <img v-if="formModel.SITE_LOGO" :src="resolveSiteImage('SITE_LOGO', formModel.SITE_LOGO)" alt="系统 Logo 预览" />
             <span v-else>暂无 Logo</span>
           </div>
           <NUpload accept="image/*" :max="1" :show-file-list="false" :disabled="!canUpdate" @before-upload="data => handleImageSelect('SITE_LOGO', data)">
@@ -152,7 +153,7 @@ onMounted(getOptions);
       <NFormItem :label="getOption('SITE_FAVICON')?.name || '系统图标'">
         <div class="flex-y-center gap-16px">
           <div class="brand-preview favicon-preview">
-            <img v-if="formModel.SITE_FAVICON" :src="formModel.SITE_FAVICON" alt="网站图标预览" />
+            <img v-if="formModel.SITE_FAVICON" :src="resolveSiteImage('SITE_FAVICON', formModel.SITE_FAVICON)" alt="网站图标预览" />
             <span v-else>暂无图标</span>
           </div>
           <NUpload accept="image/*" :max="1" :show-file-list="false" :disabled="!canUpdate" @before-upload="data => handleImageSelect('SITE_FAVICON', data)">
