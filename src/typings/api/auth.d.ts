@@ -5,7 +5,7 @@ declare namespace Api {
    * backend api module: "auth"
    */
   namespace Auth {
-    type AuthType = 'ACCOUNT' | 'EMAIL' | 'PHONE' | 'SOCIAL';
+    type AuthType = 'ACCOUNT' | 'EMAIL' | 'PHONE' | 'MINI_PROGRAM' | 'SOCIAL';
 
     interface LoginFormBase {
       clientId: string;
@@ -26,6 +26,11 @@ declare namespace Api {
       captcha: string;
     }
 
+    interface MiniProgramLoginForm extends LoginFormBase {
+      authType: 'MINI_PROGRAM';
+      code: string;
+    }
+
     interface EmailLoginForm extends LoginFormBase {
       authType: 'EMAIL';
       email: string;
@@ -39,7 +44,7 @@ declare namespace Api {
       state: string;
     }
 
-    type LoginForm = PwdLoginForm | PhoneLoginForm | EmailLoginForm | SocialLoginForm;
+    type LoginForm = PwdLoginForm | PhoneLoginForm | MiniProgramLoginForm | EmailLoginForm | SocialLoginForm;
 
     interface LoginToken {
       accessToken: string;

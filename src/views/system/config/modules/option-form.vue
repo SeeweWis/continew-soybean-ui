@@ -27,6 +27,7 @@ const booleanOptionCodes = new Set([
   'PASSWORD_ALLOW_CONTAIN_USERNAME',
   'PASSWORD_REQUIRE_SYMBOLS'
 ]);
+const secretOptionCodes = new Set(['MINI_PROGRAM_APP_SECRET']);
 const booleanOptions = [
   { label: '是', value: '1' },
   { label: '否', value: '0' }
@@ -89,6 +90,13 @@ watch(
           v-if="booleanOptionCodes.has(option.code)"
           v-model:value="formModel[option.code]"
           :options="booleanOptions"
+        />
+        <NInput
+          v-else-if="secretOptionCodes.has(option.code)"
+          v-model:value="formModel[option.code]"
+          type="password"
+          autocomplete="new-password"
+          placeholder="已配置时留空不修改"
         />
         <NSwitch
           v-else-if="isBooleanOption(option)"

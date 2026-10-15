@@ -1161,7 +1161,7 @@ declare namespace Api {
       id: CommonType.IdType;
       clientId: string;
       clientType: string;
-      /** 认证类型（ACCOUNT/EMAIL/PHONE/SOCIAL） */
+      /** 认证类型（ACCOUNT/EMAIL/PHONE/MINI_PROGRAM/SOCIAL） */
       authType: string[];
       activeTimeout: number;
       timeout: number;
