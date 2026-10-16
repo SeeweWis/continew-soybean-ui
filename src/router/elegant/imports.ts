@@ -39,6 +39,7 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   system_config_site: () => import("@/views/system/config/site/index.vue"),
   system_config_sms: () => import("@/views/system/config/sms/index.vue"),
   system_config_storage: () => import("@/views/system/config/storage/index.vue"),
+  system_config_thirdparty: () => import("@/views/system/config/thirdparty/index.vue"),
   system_dept: () => import("@/views/system/dept/index.vue"),
   system_dict: () => import("@/views/system/dict/index.vue"),
   system_dict_item: () => import("@/views/system/dict/item/index.vue"),

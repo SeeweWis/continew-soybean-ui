@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import OptionForm from './modules/option-form.vue';
 import SiteConfig from './site/index.vue';
+import ThirdPartyConfig from './thirdparty/index.vue';
 import ClientTable from './modules/client-table.vue';
 import StorageTable from './modules/storage-table.vue';
 import SmsConfigTable from './modules/sms-config-table.vue';
@@ -10,7 +11,7 @@ defineOptions({
   name: 'Config'
 });
 
-type ConfigKey = 'site' | 'security' | 'login' | 'mail' | 'sms' | 'storage' | 'client';
+type ConfigKey = 'site' | 'security' | 'login' | 'mail' | 'sms' | 'storage' | 'client' | 'third-party';
 
 const configMenuOptions = [
   { label: '网站配置', key: 'site' },
@@ -19,7 +20,8 @@ const configMenuOptions = [
   { label: '邮件配置', key: 'mail' },
   { label: '短信配置', key: 'sms' },
   { label: '存储配置', key: 'storage' },
-  { label: '客户端配置', key: 'client' }
+  { label: '客户端配置', key: 'client' },
+  { label: '三方能力配置', key: 'third-party' }
 ];
 
 const activeKey = ref<ConfigKey>('site');
@@ -44,6 +46,9 @@ const activeKey = ref<ConfigKey>('site');
           </template>
           <template v-else-if="activeKey === 'mail'">
             <OptionForm category="MAIL" />
+          </template>
+          <template v-else-if="activeKey === 'third-party'">
+            <ThirdPartyConfig />
           </template>
           <template v-else-if="activeKey === 'sms'">
             <SmsConfigTable />

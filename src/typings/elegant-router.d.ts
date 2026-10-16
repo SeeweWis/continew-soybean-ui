@@ -50,6 +50,7 @@ declare module "@elegant-router/types" {
     "system_config_site": "/system/config/site";
     "system_config_sms": "/system/config/sms";
     "system_config_storage": "/system/config/storage";
+    "system_config_thirdparty": "/system/config/thirdparty";
     "system_dept": "/system/dept";
     "system_dict": "/system/dict";
     "system_dict_item": "/system/dict/item";
@@ -159,6 +160,7 @@ declare module "@elegant-router/types" {
     | "system_config_site"
     | "system_config_sms"
     | "system_config_storage"
+    | "system_config_thirdparty"
     | "system_dept"
     | "system_dict"
     | "system_dict_item"

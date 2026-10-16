@@ -298,6 +298,7 @@ const local: App.I18n.Schema = {
     system_config_site: '网站配置',
     system_config_sms: '短信配置',
     system_config_storage: '存储配置',
+    system_config_thirdparty: '三方能力配置',
     system_dict_item: '字典项管理',
     system_file: '文件管理',
     system_notice_add: '发布公告',

@@ -302,6 +302,7 @@ const local: App.I18n.Schema = {
     system_config_site: 'Site Config',
     system_config_sms: 'SMS Config',
     system_config_storage: 'Storage Config',
+    system_config_thirdparty: 'Third-party Capabilities',
     system_dict_item: 'Dict Item',
     system_file: 'File',
     system_notice_add: 'Add Notice',

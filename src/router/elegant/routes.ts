@@ -296,6 +296,15 @@ export const generatedRoutes: GeneratedRoute[] = [
               title: 'system_config_storage',
               i18nKey: 'route.system_config_storage'
             }
+          },
+          {
+            name: 'system_config_thirdparty',
+            path: '/system/config/thirdparty',
+            component: 'view.system_config_thirdparty',
+            meta: {
+              title: 'system_config_thirdparty',
+              i18nKey: 'route.system_config_thirdparty'
+            }
           }
         ]
       },
