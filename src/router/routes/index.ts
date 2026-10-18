@@ -181,7 +181,8 @@ const layoutRouteKeys = new Set<RouteKey>([
   'system',
   'tenant',
   'tool',
-  'code'
+  'code',
+  'approval'
 ] as RouteKey[]);
 
 /** Transform ContiNew server routes into routes supported by the current elegant-router setup. */

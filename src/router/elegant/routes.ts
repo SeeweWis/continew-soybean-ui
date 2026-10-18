@@ -51,6 +51,53 @@ export const generatedRoutes: GeneratedRoute[] = [
     }
   },
   {
+    name: 'approval',
+    path: '/approval',
+    component: 'layout.base',
+    meta: {
+      title: 'approval',
+      i18nKey: 'route.approval'
+    },
+    children: [
+      {
+        name: 'approval_application',
+        path: '/approval/application',
+        component: 'view.approval_application',
+        meta: {
+          title: 'approval_application',
+          i18nKey: 'route.approval_application'
+        }
+      },
+      {
+        name: 'approval_definition',
+        path: '/approval/definition',
+        component: 'view.approval_definition',
+        meta: {
+          title: 'approval_definition',
+          i18nKey: 'route.approval_definition'
+        }
+      },
+      {
+        name: 'approval_start',
+        path: '/approval/start',
+        component: 'view.approval_start',
+        meta: {
+          title: 'approval_start',
+          i18nKey: 'route.approval_start'
+        }
+      },
+      {
+        name: 'approval_task',
+        path: '/approval/task',
+        component: 'view.approval_task',
+        meta: {
+          title: 'approval_task',
+          i18nKey: 'route.approval_task'
+        }
+      }
+    ]
+  },
+  {
     name: 'code',
     path: '/code',
     component: 'layout.base',

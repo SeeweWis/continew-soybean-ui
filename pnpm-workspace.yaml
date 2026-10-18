@@ -9,6 +9,7 @@ allowBuilds:
   esbuild: false
   simple-git-hooks: false
   vue-demi: false
+  core-js: true
 shamefullyHoist: true
 ignoreWorkspaceRootCheck: true
 linkWorkspacePackages: true

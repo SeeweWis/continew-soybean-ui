@@ -266,6 +266,11 @@ const local: App.I18n.Schema = {
     }
   },
   route: {
+    approval: 'Approvals',
+    approval_application: 'My applications',
+    approval_definition: 'Approval definitions',
+    approval_start: 'Start approval',
+    approval_task: 'My tasks',
     login: 'Login',
     403: 'No Permission',
     404: 'Page Not Found',

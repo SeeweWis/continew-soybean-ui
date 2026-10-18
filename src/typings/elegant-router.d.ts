@@ -25,6 +25,11 @@ declare module "@elegant-router/types" {
     "404": "/404";
     "500": "/500";
     "about": "/about";
+    "approval": "/approval";
+    "approval_application": "/approval/application";
+    "approval_definition": "/approval/definition";
+    "approval_start": "/approval/start";
+    "approval_task": "/approval/task";
     "code": "/code";
     "code_generator": "/code/generator";
     "home": "/home";
@@ -107,6 +112,7 @@ declare module "@elegant-router/types" {
     | "404"
     | "500"
     | "about"
+    | "approval"
     | "code"
     | "home"
     | "iframe-page"
@@ -144,6 +150,10 @@ declare module "@elegant-router/types" {
     | "social-callback"
     | "user-center"
     | "about"
+    | "approval_application"
+    | "approval_definition"
+    | "approval_start"
+    | "approval_task"
     | "code_generator"
     | "home"
     | "monitor_log"

@@ -262,6 +262,11 @@ const local: App.I18n.Schema = {
     }
   },
   route: {
+    approval: '审批中心',
+    approval_application: '我的申请',
+    approval_definition: '审批定义',
+    approval_start: '发起审批',
+    approval_task: '我的待办',
     login: '登录',
     403: '无权限',
     404: '页面不存在',
