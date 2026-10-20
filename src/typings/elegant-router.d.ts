@@ -66,9 +66,6 @@ declare module "@elegant-router/types" {
     "system_notice_view": "/system/notice/view";
     "system_role": "/system/role";
     "system_user": "/system/user";
-    "tenant": "/tenant";
-    "tenant_management": "/tenant/management";
-    "tenant_package": "/tenant/package";
     "user-center": "/user-center";
     "workbench": "/workbench";
     "workbench_charts": "/workbench/charts";
@@ -122,7 +119,6 @@ declare module "@elegant-router/types" {
     | "schedule"
     | "social-callback"
     | "system"
-    | "tenant"
     | "user-center"
     | "workbench"
   >;
@@ -181,8 +177,6 @@ declare module "@elegant-router/types" {
     | "system_notice_view"
     | "system_role"
     | "system_user"
-    | "tenant_management"
-    | "tenant_package"
     | "workbench_charts"
     | "workbench_home"
   >;

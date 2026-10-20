@@ -272,7 +272,7 @@ watch(visible, show => {
           :options="users"
           :loading="usersLoading"
           filterable
-          placeholder="选择同一租户的用户"
+          placeholder="选择用户"
         />
       </NFormItem>
       <NAlert v-if="action === 'transfer' && usersFailed" type="error" class="mb-16px">

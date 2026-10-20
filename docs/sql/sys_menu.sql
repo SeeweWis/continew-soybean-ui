@@ -3,7 +3,6 @@ UPDATE `sys_menu` SET `component` = 'Layout', `icon` = 'carbon:cloud-service-man
 UPDATE `sys_menu` SET `component` = 'Layout', `icon` = 'stash:dashboard', `menu_name` = 'route.monitor' WHERE `menu_id` = 2;
 UPDATE `sys_menu` SET `component` = 'Layout', `icon` = 'tabler:tools', `menu_name` = 'route.tool' WHERE `menu_id` = 3;
 UPDATE `sys_menu` SET `component` = 'Layout', `icon` = 'material-symbols:kid-star-outline', `menu_name` = 'route.demo' WHERE `menu_id` = 5;
-UPDATE `sys_menu` SET `component` = 'Layout', `icon` = 'tabler:building-cog', `menu_name` = 'menu.system_tenant' WHERE `menu_id` = 6;
 UPDATE `sys_menu` SET `component` = 'Layout', `icon` = 'tabler:logs', `menu_name` = 'menu.system_log' WHERE `menu_id` = 108;
 
 -- 页面类型
@@ -19,8 +18,6 @@ UPDATE `sys_menu` SET `icon` = 'majesticons:status-online-line', `menu_name` = '
 UPDATE `sys_menu` SET `icon` = 'simple-icons:redis', `menu_name` = 'route.monitor_cache' WHERE `menu_id` = 113;
 UPDATE `sys_menu` SET `icon` = 'material-symbols:code-blocks-outline', `menu_name` = 'route.tool_gen' WHERE `menu_id` = 115;
 UPDATE `sys_menu` SET `icon` = 'material-symbols:attach-file', `menu_name` = 'route.system_oss' WHERE `menu_id` = 118;
-UPDATE `sys_menu` SET `icon` = 'tabler:building-skyscraper', `menu_name` = 'route.system_tenant' WHERE `menu_id` = 121;
-UPDATE `sys_menu` SET `icon` = 'lets-icons:package-box-alt', `menu_name` = 'route.system_tenant-package' WHERE `menu_id` = 122;
 UPDATE `sys_menu` SET `icon` = 'tabler:device-imac-cog', `menu_name` = 'route.system_client' WHERE `menu_id` = 123;
 UPDATE `sys_menu` SET `icon` = 'carbon:operations-record', `menu_name` = 'route.monitor_operlog' WHERE `menu_id` = 500;
 UPDATE `sys_menu` SET `icon` = 'tabler:login-2', `menu_name` = 'route.monitor_logininfor' WHERE `menu_id` = 501;

@@ -179,7 +179,6 @@ const layoutRouteKeys = new Set<RouteKey>([
   'open',
   'schedule',
   'system',
-  'tenant',
   'tool',
   'code',
   'approval'

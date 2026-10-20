@@ -1,4 +1,6 @@
 # 前后端对齐差异文档
+> 历史对接记录。2026-10-20 移除租户能力后，本文件及 `docs/api/openapi.json` 的冻结快照不代表当前接口契约；请以现行后端源码和运行时 OpenAPI 为准。
+
 
 ## 2026-10-10 已确认问题修复
 
@@ -9,7 +11,6 @@
 | P0 | 登录与会话恢复 | 读取 `accessToken`，只在内存持有；`POST /auth/refresh` 携带 HttpOnly Cookie；HTTP 401 与业务码 401 共用并发刷新，每个请求最多重试一次；会话版本阻止退出或切换账号后的旧请求写回。 |
 | P1 | 个人中心 | `PATCH /user/profile/basic/info` 使用 `nickname/gender`，性别为 0 未知、1 男、2 女；密码使用 `PATCH /user/profile/password` 并 RSA 加密；头像使用 `PATCH /user/profile/avatar`，字段 `avatarFile`，保存响应 `avatar` URL。 |
 | P1 | 联系方式与验证码 | 手机、邮箱分别通过 `PATCH /user/profile/phone`、`PATCH /user/profile/email` 提交新联系方式、验证码和 RSA 加密的当前密码。发送验证码前调用 `/captcha/behavior` 获取、校验拼图，再将 `captchaVerification` 提交给 `/captcha/sms` 或 `/captcha/mail`；登录页复用此流程。 |
-| P1 | 租户管理员密码 | 用户填写并确认新密码，提交 `PUT /tenant/management/{id}/admin/pwd`，请求字段为 RSA 加密的 `password`；操作权限为 `tenant:management:updateAdminUserPwd`。 |
 | P2 | 邮箱登录路由 | 在 `build/plugins/router.ts` 中登记 `email-login`，构建生成的路由、转换和类型声明保留该入口。 |
 
 开发 Cookie 来源白名单增加 `http://localhost:9527`。后端需加载更新后的 dev 配置；生产环境仍须配置真实前端 Origin，不使用通配符放行刷新 Cookie。

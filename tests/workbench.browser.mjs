@@ -14,7 +14,7 @@ await page.route('**/dev-api/**', async route => {
   let data = [];
   let status = 200;
   if (path === '/auth/refresh') {
-    if (signedIn) data = { accessToken: 'workbench-test', tokenType: 'Bearer', expiresIn: 300, tenantId: 0 };
+    if (signedIn) data = { accessToken: 'workbench-test', tokenType: 'Bearer', expiresIn: 300 };
     else status = 401;
   } else if (path === '/auth/user/info') {
     data = {

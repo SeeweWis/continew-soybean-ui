@@ -454,35 +454,6 @@ export const generatedRoutes: GeneratedRoute[] = [
     ]
   },
   {
-    name: 'tenant',
-    path: '/tenant',
-    component: 'layout.base',
-    meta: {
-      title: 'tenant',
-      i18nKey: 'route.tenant'
-    },
-    children: [
-      {
-        name: 'tenant_management',
-        path: '/tenant/management',
-        component: 'view.tenant_management',
-        meta: {
-          title: 'tenant_management',
-          i18nKey: 'route.tenant_management'
-        }
-      },
-      {
-        name: 'tenant_package',
-        path: '/tenant/package',
-        component: 'view.tenant_package',
-        meta: {
-          title: 'tenant_package',
-          i18nKey: 'route.tenant_package'
-        }
-      }
-    ]
-  },
-  {
     name: 'user-center',
     path: '/user-center',
     component: 'layout.base$view.user-center',

@@ -27,9 +27,9 @@ await page.route('**/dev-api/**', async route => {
     if (mode === 'anonymous' || mode === 'refresh-fail') {
       status = 401;
       response.code = 401;
-    } else response.data = { accessToken: 'fresh-token', tokenType: 'Bearer', expiresIn: 300, tenantId: 0 };
+    } else response.data = { accessToken: 'fresh-token', tokenType: 'Bearer', expiresIn: 300 };
   } else if (path === '/auth/login') {
-    response.data = { accessToken: 'login-token', tokenType: 'Bearer', expiresIn: 300, tenantId: 0 };
+    response.data = { accessToken: 'login-token', tokenType: 'Bearer', expiresIn: 300 };
     headers['Set-Cookie'] = 'refresh_token=test-cookie; Path=/; HttpOnly; SameSite=Lax';
   } else if (path === '/auth/logout') {
     headers['Set-Cookie'] = 'refresh_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0';
@@ -67,8 +67,7 @@ async function load() {
       auth: await import('/src/store/modules/auth/shared.ts'),
       request: (await import('/src/service/request/index.ts')).request,
       store: (await import('/src/store/modules/auth/index.ts')).useAuthStore(),
-      users: await import('/src/service/api/system/user.ts'),
-      tenants: await import('/src/service/api/system/tenant.ts')
+      users: await import('/src/service/api/system/user.ts')
     };
   });
 }
@@ -88,7 +87,7 @@ try {
   mode = 'normal';
   let before = refreshCalls;
   const concurrent = await page.evaluate(async () => {
-    window.repair.auth.setAccessSession({ accessToken: 'old-token', tenantId: 0 });
+    window.repair.auth.setAccessSession({ accessToken: 'old-token' });
     const results = await Promise.all([
       window.repair.request({ url: '/test-http-one' }),
       window.repair.request({ url: '/test-business-two' }),
@@ -139,7 +138,7 @@ try {
   assert.equal(await page.evaluate(() => window.repair.auth.getToken()), 'fresh-token');
   assert.equal(await page.evaluate(() => window.repair.store.userInfo.id), 1);
   await page.evaluate(async () => {
-    const { users, tenants } = window.repair;
+    const { users } = window.repair;
     await users.fetchUpdateUserProfile({ nickname: 'test-name', gender: 2 });
     await users.fetchUpdateUserPassword({ oldPassword: 'Old123!', newPassword: 'New123!' });
     await users.fetchUpdateUserEmail({ email: 'test@example.com', captcha: '123456', oldPassword: 'Old123!' });
@@ -148,7 +147,6 @@ try {
     avatar.append('avatarFile', new Blob(['avatar'], { type: 'image/png' }), 'avatar.png');
     const result = await users.fetchUpdateUserAvatar(avatar);
     if (result.data.avatar !== '/avatar.png') throw new Error('avatar URL was lost');
-    await tenants.fetchResetTenantAdminPwd(9, 'Tenant123!');
   });
   for (const path of [
     '/user/profile/basic/info',
@@ -169,11 +167,6 @@ try {
     assert.notEqual(body.oldPassword, 'Old123!');
   }
   assert.match(requests.find(request => request.path === '/user/profile/avatar').body, /name="avatarFile"/);
-  const tenant = JSON.parse(requests.find(request => request.path === '/tenant/management/9/admin/pwd').body);
-  assert.deepEqual(Object.keys(tenant), ['password']);
-  assert.equal(typeof tenant.password, 'string');
-  assert.notEqual(tenant.password, 'Tenant123!');
-
   await page.evaluate(() => window.repair.store.logout());
   assert.equal(await page.evaluate(() => window.repair.auth.getToken()), '');
   assert.equal(
@@ -182,7 +175,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: login, memory-only token, cookie credentials, concurrent HTTP/business 401, bounded retry, refresh failure, stale response, reload, profile/tenant contracts, logout'
+    'PASS: login, memory-only token, cookie credentials, concurrent HTTP/business 401, bounded retry, refresh failure, stale response, reload, profile contracts, logout'
   );
 } finally {
   await browser.close();

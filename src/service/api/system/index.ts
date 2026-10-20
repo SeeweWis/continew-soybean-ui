@@ -8,8 +8,6 @@ export * from './social';
 export * from './option';
 export * from './client';
 export * from './notice';
-export * from './tenant';
-export * from './tenant-package';
 export * from './file';
 export * from './storage';
 export * from './sms-config';

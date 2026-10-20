@@ -14,8 +14,6 @@ export function getSessionVersion() {
 
 export function setAccessSession(session: Api.Auth.LoginToken) {
   accessToken.value = session.accessToken;
-  if (session.tenantId != null) localStg.set('tenantId', session.tenantId);
-  else localStg.remove('tenantId');
 }
 
 /** Get token */
@@ -29,5 +27,4 @@ export function clearAuthStorage() {
   accessToken.value = '';
   localStg.remove('token');
   localStg.remove('refreshToken');
-  localStg.remove('tenantId');
 }

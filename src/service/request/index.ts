@@ -44,11 +44,6 @@ export const request = createFlatRequest(
         Object.assign(config.headers, { Authorization });
       }
 
-      // 租户上下文请求头，后端默认租户 ID 为 0
-      const tenantId = localStg.get('tenantId');
-      if (tenantId !== null) {
-        config.headers['X-Tenant-Id'] = tenantId;
-      }
       // 对应国际化资源文件后缀
       config.headers['Content-Language'] = (localStg.get('lang') || 'zh-CN').replace('-', '_');
 
