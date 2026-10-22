@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { useLoading } from '@sa/hooks';
 import { fetchGetOptionList, fetchResetOptionValue, fetchUpdateOptions } from '@/service/api/system';
 import { $t } from '@/locales';
 import { useAuth } from '@/hooks/business/auth';
+import DeptTreeSelect from '@/components/custom/dept-tree-select.vue';
 
 defineOptions({
   name: 'OptionForm'
@@ -40,10 +41,17 @@ const secretOptionCodes = new Set([
   'WECHAT_PAY_PRIVATE_KEY',
   'WECHAT_PAY_API_V3_KEY'
 ]);
+const deptOptionCodes = new Set(['MINI_PROGRAM_DEFAULT_DEPT_ID']);
 const booleanOptions = [
   { label: '是', value: '1' },
   { label: '否', value: '0' }
 ];
+const miniProgramDeptId = computed({
+  get: () => formModel.MINI_PROGRAM_DEFAULT_DEPT_ID || null,
+  set: (value: CommonType.IdType | null) => {
+    formModel.MINI_PROGRAM_DEFAULT_DEPT_ID = value == null ? '' : String(value);
+  }
+});
 
 /** 布尔型参数（渲染开关） */
 function isBooleanOption(option: Api.System.ContinewOption) {
@@ -144,6 +152,11 @@ watch(
           :type="option.code === 'WECHAT_PAY_PRIVATE_KEY' ? 'textarea' : 'password'"
           :autosize="option.code === 'WECHAT_PAY_PRIVATE_KEY' ? { minRows: 4, maxRows: 10 } : undefined"
           placeholder="已配置时留空不修改"
+        />
+        <DeptTreeSelect
+          v-else-if="deptOptionCodes.has(option.code)"
+          v-model:value="miniProgramDeptId"
+          placeholder="请选择小程序用户默认归属部门"
         />
         <NSwitch
           v-else-if="isBooleanOption(option)"
