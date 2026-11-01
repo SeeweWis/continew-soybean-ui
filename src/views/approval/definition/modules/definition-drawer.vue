@@ -124,13 +124,17 @@ async function save() {
   }
   try {
     model.value.flowConfig = serializeFlowConfig(nodes.value);
-    if (!designerRef.value?.validate()) {
-      saving.value = false;
-      return;
-    }
+  } catch (cause) {
+    step.value = 2;
+    window.$message?.error(cause instanceof Error ? cause.message : '请检查审批节点配置');
+    saving.value = false;
+    return;
+  }
+  try {
     model.value.formConfig = serializeFormConfig(formConfig.value);
   } catch (cause) {
-    window.$message?.error(cause instanceof Error ? cause.message : '请检查审批节点配置');
+    step.value = 3;
+    window.$message?.error(cause instanceof Error ? cause.message : '请检查表单配置');
     saving.value = false;
     return;
   }
