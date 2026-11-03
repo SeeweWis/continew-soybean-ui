@@ -4,6 +4,7 @@ import type { TreeOption } from 'naive-ui';
 import { useLoading } from '@sa/hooks';
 import { fetchGetRoleDetail, fetchGetRolePermissionTree, fetchUpdateRolePermission } from '@/service/api/system';
 import { $t } from '@/locales';
+import { includeAncestors, updateCheckedIds } from './role-permission-selection';
 
 defineOptions({
   name: 'RolePermissionDrawer'
@@ -32,6 +33,10 @@ const treeData = ref<Api.System.ContinewRolePermission[]>([]);
 const checkedIds = ref<CommonType.IdType[]>([]);
 const menuCheckStrictly = ref(true);
 
+function handleCheckedKeys(ids: CommonType.IdType[]) {
+  checkedIds.value = updateCheckedIds(treeData.value, checkedIds.value, ids, menuCheckStrictly.value);
+}
+
 async function getDetail() {
   if (!props.rowData) return;
   startLoading();
@@ -41,7 +46,7 @@ async function getDetail() {
   }
   const { data: detail, error: detailError } = await fetchGetRoleDetail(props.rowData.id);
   if (!detailError) {
-    checkedIds.value = detail.menuIds ?? [];
+    checkedIds.value = includeAncestors(treeData.value, detail.menuIds ?? []);
     menuCheckStrictly.value = detail.menuCheckStrictly ?? true;
   }
   endLoading();
@@ -53,7 +58,7 @@ function closeDrawer() {
 
 async function handleSubmit() {
   const { error } = await fetchUpdateRolePermission(props.rowData!.id, {
-    menuIds: checkedIds.value,
+    menuIds: includeAncestors(treeData.value, checkedIds.value),
     menuCheckStrictly: menuCheckStrictly.value
   });
   if (error) return;
@@ -78,10 +83,10 @@ watch(visible, val => {
           <NSwitch v-model:value="menuCheckStrictly" />
         </NFormItem>
         <NTree
-          v-model:checked-keys="checkedIds"
+          :checked-keys="checkedIds"
           block-line
           checkable
-          cascade
+          :cascade="false"
           :data="treeData as unknown as TreeOption[]"
           key-field="id"
           label-field="title"
@@ -89,6 +94,7 @@ watch(visible, val => {
           default-expand-all
           virtual-scroll
           style="max-height: 480px"
+          @update:checked-keys="handleCheckedKeys"
         />
       </NSpin>
       <template #footer>

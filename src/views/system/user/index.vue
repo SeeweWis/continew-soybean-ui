@@ -48,12 +48,14 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       {
         type: 'selection',
         align: 'center',
+        fixed: 'left',
         width: 48
       },
       {
         key: 'username',
         title: $t('page.system.user.userName'),
         align: 'left',
+        fixed: 'left',
         width: 220,
         ellipsis: true,
         render: row => {
@@ -120,6 +122,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         key: 'operate',
         title: $t('common.operate'),
         align: 'center',
+        fixed: 'right',
         width: 150,
         render: row => {
           if (row.isSystem) return null;
@@ -288,8 +291,8 @@ function handleResetSearch() {
         </NTree>
       </NSpin>
     </template>
-    <div class="h-full flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
-      <NCard :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
+    <div class="h-full min-w-0 flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
+      <NCard :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden" content-class="sm:min-h-0 sm:flex sm:flex-col">
         <UserSearch v-model:model="searchParams" class="mb-12px" @reset="handleResetSearch" @search="getDataByPage" />
         <div class="mb-12px flex flex-wrap items-center justify-between gap-12px">
           <NSpace>
@@ -325,7 +328,7 @@ function handleResetSearch() {
           remote
           :row-key="row => row.id"
           :pagination="mobilePagination"
-          class="h-full"
+          class="min-w-0 sm:min-h-0 sm:flex-1"
         />
         <UserImportModal v-model:visible="importVisible" @submitted="getData" />
         <UserOperateDrawer
@@ -382,12 +385,6 @@ function handleResetSearch() {
     height: 16px !important;
     width: 16px !important;
   }
-}
-
-:deep(.n-data-table-wrapper),
-:deep(.n-data-table-base-table),
-:deep(.n-data-table-base-table-body) {
-  height: 100%;
 }
 
 @media screen and (max-width: 800px) {

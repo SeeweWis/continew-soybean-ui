@@ -337,7 +337,7 @@ const tableTitle = computed(() => {
         </NTree>
       </NSpin>
     </template>
-    <div class="h-full flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
+    <div class="h-full min-w-0 flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
       <DictDataSearch v-model:model="searchParams" @reset="handleResetSearch" @search="getDataByPage" />
       <TableRowCheckAlert v-model:checked-row-keys="checkedRowKeys" />
       <NCard :title="() => tableTitle" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
@@ -425,12 +425,6 @@ const tableTitle = computed(() => {
     height: 16px !important;
     width: 16px !important;
   }
-}
-
-:deep(.n-data-table-wrapper),
-:deep(.n-data-table-base-table),
-:deep(.n-data-table-base-table-body) {
-  height: 100%;
 }
 
 :deep(.n-card-header__main) {
