@@ -126,6 +126,8 @@ declare namespace Api {
       parentId: CommonType.IdType;
       /** 类型（1 目录、2 菜单、3 按钮） */
       type: 1 | 2 | 3;
+      /** 终端类型（PC 桌面端、XCX 小程序、ANDROID 安卓） */
+      clientType?: 'PC' | 'XCX' | 'ANDROID';
       path?: string;
       name?: string;
       component?: string;
@@ -148,6 +150,8 @@ declare namespace Api {
     /** 菜单创建/修改请求（后端 MenuReq） */
     type ContinewMenuReq = {
       type: 1 | 2 | 3;
+      /** 终端类型（按钮类型自动继承上级菜单，可不传） */
+      clientType?: 'PC' | 'XCX' | 'ANDROID' | null;
       icon?: string | null;
       title: string;
       sort: number;
@@ -167,6 +171,7 @@ declare namespace Api {
     type ContinewMenuQuery = {
       title?: string | null;
       status?: 1 | 2 | null;
+      clientType?: 'PC' | 'XCX' | 'ANDROID' | null;
     };
 
     /** 部门（后端 DeptResp） */

@@ -12,11 +12,14 @@ defineOptions({
 
 interface Props {
   immediate?: boolean;
+  /** 终端类型过滤（不传查询全部） */
+  clientType?: 'PC' | 'XCX' | 'ANDROID' | null;
   [key: string]: any;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  immediate: true
+  immediate: true,
+  clientType: null
 });
 
 const value = defineModel<CommonType.IdType | null>('value', { required: false });
@@ -26,7 +29,7 @@ const { loading, startLoading, endLoading } = useLoading();
 
 async function getMenuTree() {
   startLoading();
-  const { error, data } = await fetchGetMenuTree();
+  const { error, data } = await fetchGetMenuTree({ clientType: props.clientType });
   if (error) {
     endLoading();
     return;

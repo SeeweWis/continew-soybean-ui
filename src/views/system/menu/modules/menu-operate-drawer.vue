@@ -38,9 +38,17 @@ const title = computed(() => {
   return titles[props.operateType];
 });
 
+/** 终端类型选项（对齐字典 client_type） */
+const clientTypeOptions = [
+  { label: '桌面端（PC）', value: 'PC' },
+  { label: '小程序（XCX）', value: 'XCX' },
+  { label: '安卓（ANDROID）', value: 'ANDROID' }
+];
+
 type Model = {
   parentId: CommonType.IdType | null;
   type: 1 | 2 | 3;
+  clientType: 'PC' | 'XCX' | 'ANDROID';
   title: string;
   path: string | null;
   name: string | null;
@@ -61,6 +69,7 @@ function createDefaultModel(): Model {
   return {
     parentId: 0,
     type: 2,
+    clientType: 'PC',
     title: '',
     path: null,
     name: null,
@@ -90,6 +99,10 @@ function handleUpdateModelWhenEdit() {
     if (props.rowData) {
       model.value.parentId = props.rowData.id;
       model.value.type = props.rowData.type === 1 ? 2 : 3;
+      // 终端类型跟随上级菜单所在端
+      if (props.rowData.clientType) {
+        model.value.clientType = props.rowData.clientType;
+      }
     }
     return;
   }
@@ -109,6 +122,7 @@ async function handleSubmit() {
   const data: Api.System.ContinewMenuReq = {
     parentId: model.value.parentId ?? 0,
     type: model.value.type,
+    clientType: model.value.type === 3 ? undefined : model.value.clientType,
     title: model.value.title,
     path: model.value.path ?? undefined,
     name: model.value.name ?? undefined,
@@ -153,10 +167,13 @@ watch(visible, () => {
     <NDrawerContent :title="title" :native-scrollbar="false" closable>
       <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="96">
         <NFormItem label="上级菜单" path="parentId">
-          <MenuTreeSelect v-model:value="model.parentId" />
+          <MenuTreeSelect v-model:value="model.parentId" :client-type="model.clientType" />
         </NFormItem>
         <NFormItem label="菜单类型" path="type">
           <DictSelect v-model:value="model.type" dict-code="menu_type_enum" />
+        </NFormItem>
+        <NFormItem v-if="model.type !== 3" label="终端类型" path="clientType">
+          <NSelect v-model:value="model.clientType" :options="clientTypeOptions" />
         </NFormItem>
         <NFormItem label="菜单名称" path="title">
           <NInput v-model:value="model.title" placeholder="请输入菜单名称" />

@@ -19,8 +19,24 @@ const { hasAuth } = useAuth();
 
 const searchParams = ref<Api.System.ContinewMenuQuery>({
   title: null,
-  status: null
+  status: null,
+  clientType: 'PC'
 });
+
+const activeTab = ref<'PC' | 'XCX' | 'ANDROID'>('PC');
+
+/** 终端类型 Tab 项（对齐字典 client_type） */
+const terminalTabs: { value: 'PC' | 'XCX' | 'ANDROID'; label: string }[] = [
+  { value: 'PC', label: '桌面端' },
+  { value: 'XCX', label: '小程序' },
+  { value: 'ANDROID', label: '安卓' }
+];
+
+function handleTabChange(value: 'PC' | 'XCX' | 'ANDROID') {
+  activeTab.value = value;
+  searchParams.value.clientType = value;
+  getData();
+}
 
 const { columns, columnChecks, data, getData, loading, scrollX } = useNaiveTable({
   api: () => fetchGetMenuTree(searchParams.value),
@@ -198,6 +214,11 @@ async function handleClearCache() {
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
     <NCard :bordered="false" class="table-search card-wrapper" size="small">
+      <NTabs type="line" :value="activeTab" class="mb-12px" @update:value="handleTabChange">
+        <NTab v-for="tab in terminalTabs" :key="tab.value" :name="tab.value">
+          {{ tab.label }}
+        </NTab>
+      </NTabs>
       <NCollapse>
         <NCollapseItem :title="$t('common.search')" name="search">
           <NForm label-placement="left" :label-width="80">
@@ -215,6 +236,7 @@ async function handleClearCache() {
                       () => {
                         searchParams.title = null;
                         searchParams.status = null;
+                        searchParams.clientType = activeTab;
                         getData();
                       }
                     "
