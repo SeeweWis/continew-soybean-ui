@@ -192,7 +192,11 @@ onBeforeUnmount(() => { sequence += 1; });
         >
           <template #icon><SvgIcon icon="lucide:layout-grid" /></template>
           文件类型
-          <SvgIcon icon="lucide:chevron-up" class="ml-auto" :style="{ transform: categoriesExpanded ? undefined : 'rotate(180deg)' }" />
+          <SvgIcon
+            icon="lucide:chevron-up"
+            class="ml-auto"
+            :style="{ transform: categoriesExpanded ? undefined : 'rotate(180deg)' }"
+          />
         </NButton>
         <NButton
           v-for="item in fileCategories"
@@ -452,12 +456,7 @@ onBeforeUnmount(() => { sequence += 1; });
           </NDescriptionsItem>
           <NDescriptionsItem v-if="detail.sha256" label="SHA256">
             <span class="detail-value">{{ detail.sha256 }}</span>
-            <ButtonIcon
-              text
-              aria-label="复制 SHA256"
-              tooltip-content="复制"
-              @click="copy(detail.sha256)"
-            >
+            <ButtonIcon text aria-label="复制 SHA256" tooltip-content="复制" @click="copy(detail.sha256)">
               <SvgIcon icon="lucide:copy" />
             </ButtonIcon>
           </NDescriptionsItem>

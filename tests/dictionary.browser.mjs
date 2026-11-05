@@ -9,8 +9,15 @@ const page = await browser.newPage();
 const errors = [];
 const hits = new Map();
 const dictionaries = {
-  gender_enum: [{ label: 'Unknown', value: 0 }, { label: 'Male', value: 1 }, { label: 'Female', value: 2 }],
-  dis_enable_status_enum: [{ label: 'Enabled', value: 1 }, { label: 'Disabled', value: 2 }],
+  gender_enum: [
+    { label: 'Unknown', value: 0 },
+    { label: 'Male', value: 1 },
+    { label: 'Female', value: 2 }
+  ],
+  dis_enable_status_enum: [
+    { label: 'Enabled', value: 1 },
+    { label: 'Disabled', value: 2 }
+  ],
   empty_dict: []
 };
 let failed = true;
@@ -50,13 +57,20 @@ try {
     document.body.append(container);
     const node = h({
       setup() {
-        return () => h('div', [
-          h(DictSelect, { dictCode: window.dictTest.code.value, value: window.dictTest.value.value,
-            'onUpdate:value': value => { window.dictTest.value.value = value; }, 'data-testid': 'enum-select' }),
-          h(DictTag, { dictCode: 'gender_enum', value: 0, 'data-testid': 'enum-tag' }),
-          h(DictSelect, { dictCode: 'empty_dict', 'data-testid': 'empty-select' }),
-          h(DictSelect, { dictCode: 'retry_dict', 'data-testid': 'retry-select' })
-        ]);
+        return () =>
+          h('div', [
+            h(DictSelect, {
+              dictCode: window.dictTest.code.value,
+              value: window.dictTest.value.value,
+              'onUpdate:value': value => {
+                window.dictTest.value.value = value;
+              },
+              'data-testid': 'enum-select'
+            }),
+            h(DictTag, { dictCode: 'gender_enum', value: 0, 'data-testid': 'enum-tag' }),
+            h(DictSelect, { dictCode: 'empty_dict', 'data-testid': 'empty-select' }),
+            h(DictSelect, { dictCode: 'retry_dict', 'data-testid': 'retry-select' })
+          ]);
       }
     });
     node.appContext = document.querySelector('#app').__vue_app__._context;
@@ -72,7 +86,9 @@ try {
     window.dictTest.store.setDict('gender_enum', [{ label: 'Updated female', value: 2 }]);
   });
   await page.getByTestId('enum-select').getByText('Updated female', { exact: true }).waitFor();
-  await page.evaluate(() => { window.dictTest.code.value = 'dis_enable_status_enum'; });
+  await page.evaluate(() => {
+    window.dictTest.code.value = 'dis_enable_status_enum';
+  });
   await page.getByTestId('enum-select').getByText('Disabled', { exact: true }).waitFor();
   await page.getByTestId('empty-select').click();
   await page.getByText('暂无选项', { exact: true }).waitFor();
@@ -84,7 +100,10 @@ try {
   await page.getByText('Recovered', { exact: true }).waitFor();
   assert.equal(hits.get('retry_dict'), 2);
   assert.deepEqual(errors, []);
-  const userForm = await readFile(new URL('../src/views/system/user/modules/user-operate-drawer.vue', import.meta.url), 'utf8');
+  const userForm = await readFile(
+    new URL('../src/views/system/user/modules/user-operate-drawer.vue', import.meta.url),
+    'utf8'
+  );
   assert.match(userForm, /gender: Api\.System\.ContinewUser\['gender'\]/);
   assert.doesNotMatch(userForm, /gender: '0'|status: '1'/);
   console.log('PASS: enum selection, numeric zero, request sharing, reactive dictionaries, empty/error/retry states');

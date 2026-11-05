@@ -292,7 +292,12 @@ function handleResetSearch() {
       </NSpin>
     </template>
     <div class="h-full min-w-0 flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
-      <NCard :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden" content-class="sm:min-h-0 sm:flex sm:flex-col">
+      <NCard
+        :bordered="false"
+        size="small"
+        class="card-wrapper sm:flex-1-hidden"
+        content-class="sm:min-h-0 sm:flex sm:flex-col"
+      >
         <UserSearch v-model:model="searchParams" class="mb-12px" @reset="handleResetSearch" @search="getDataByPage" />
         <div class="mb-12px flex flex-wrap items-center justify-between gap-12px">
           <NSpace>

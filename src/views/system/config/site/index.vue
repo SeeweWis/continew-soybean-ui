@@ -10,7 +10,14 @@ import { $t } from '@/locales';
 
 defineOptions({ name: 'SiteConfig' });
 
-const SITE_OPTION_CODES = ['SITE_LOGO', 'SITE_FAVICON', 'SITE_TITLE', 'SITE_DESCRIPTION', 'SITE_COPYRIGHT', 'SITE_BEIAN'] as const;
+const SITE_OPTION_CODES = [
+  'SITE_LOGO',
+  'SITE_FAVICON',
+  'SITE_TITLE',
+  'SITE_DESCRIPTION',
+  'SITE_COPYRIGHT',
+  'SITE_BEIAN'
+] as const;
 
 type SiteOptionCode = (typeof SITE_OPTION_CODES)[number];
 type SiteImageCode = 'SITE_LOGO' | 'SITE_FAVICON';
@@ -137,42 +144,103 @@ onMounted(getOptions);
 
 <template>
   <NSpin :show="loading">
-    <NForm ref="formRef" :model="formModel" :rules="formRules" label-placement="left" :label-width="160" class="max-w-760px">
+    <NForm
+      ref="formRef"
+      :model="formModel"
+      :rules="formRules"
+      label-placement="left"
+      :label-width="160"
+      class="max-w-760px"
+    >
       <NFormItem :label="getOption('SITE_LOGO')?.name || '系统 LOGO'">
         <div class="flex-y-center gap-16px">
           <div class="brand-preview logo-preview">
-            <img v-if="formModel.SITE_LOGO" :src="resolveSiteImage('SITE_LOGO', formModel.SITE_LOGO)" alt="系统 Logo 预览" />
+            <img
+              v-if="formModel.SITE_LOGO"
+              :src="resolveSiteImage('SITE_LOGO', formModel.SITE_LOGO)"
+              alt="系统 Logo 预览"
+            />
             <span v-else>暂无 Logo</span>
           </div>
-          <NUpload accept="image/*" :max="1" :show-file-list="false" :disabled="!canUpdate" @before-upload="data => handleImageSelect('SITE_LOGO', data)">
+          <NUpload
+            accept="image/*"
+            :max="1"
+            :show-file-list="false"
+            :disabled="!canUpdate"
+            @before-upload="data => handleImageSelect('SITE_LOGO', data)"
+          >
             <NButton :disabled="!canUpdate">上传 Logo</NButton>
           </NUpload>
         </div>
-        <template v-if="getOption('SITE_LOGO')?.description" #feedback>{{ getOption('SITE_LOGO')?.description }}</template>
+        <template v-if="getOption('SITE_LOGO')?.description" #feedback>
+          {{ getOption('SITE_LOGO')?.description }}
+        </template>
       </NFormItem>
       <NFormItem :label="getOption('SITE_FAVICON')?.name || '系统图标'">
         <div class="flex-y-center gap-16px">
           <div class="brand-preview favicon-preview">
-            <img v-if="formModel.SITE_FAVICON" :src="resolveSiteImage('SITE_FAVICON', formModel.SITE_FAVICON)" alt="网站图标预览" />
+            <img
+              v-if="formModel.SITE_FAVICON"
+              :src="resolveSiteImage('SITE_FAVICON', formModel.SITE_FAVICON)"
+              alt="网站图标预览"
+            />
             <span v-else>暂无图标</span>
           </div>
-          <NUpload accept="image/*" :max="1" :show-file-list="false" :disabled="!canUpdate" @before-upload="data => handleImageSelect('SITE_FAVICON', data)">
+          <NUpload
+            accept="image/*"
+            :max="1"
+            :show-file-list="false"
+            :disabled="!canUpdate"
+            @before-upload="data => handleImageSelect('SITE_FAVICON', data)"
+          >
             <NButton :disabled="!canUpdate">上传图标</NButton>
           </NUpload>
         </div>
-        <template v-if="getOption('SITE_FAVICON')?.description" #feedback>{{ getOption('SITE_FAVICON')?.description }}</template>
+        <template v-if="getOption('SITE_FAVICON')?.description" #feedback>
+          {{ getOption('SITE_FAVICON')?.description }}
+        </template>
       </NFormItem>
-      <NFormItem path="SITE_TITLE" :label="getOption('SITE_TITLE')?.name || '系统名称'" :feedback="getOption('SITE_TITLE')?.description">
-        <NInput v-model:value="formModel.SITE_TITLE" :disabled="!canUpdate" placeholder="请输入系统名称" :maxlength="18" show-count />
+      <NFormItem
+        path="SITE_TITLE"
+        :label="getOption('SITE_TITLE')?.name || '系统名称'"
+        :feedback="getOption('SITE_TITLE')?.description"
+      >
+        <NInput
+          v-model:value="formModel.SITE_TITLE"
+          :disabled="!canUpdate"
+          placeholder="请输入系统名称"
+          :maxlength="18"
+          show-count
+        />
       </NFormItem>
-      <NFormItem path="SITE_DESCRIPTION" :label="getOption('SITE_DESCRIPTION')?.name || '系统描述'" :feedback="getOption('SITE_DESCRIPTION')?.description">
-        <NInput v-model:value="formModel.SITE_DESCRIPTION" :disabled="!canUpdate" type="textarea" :rows="3" placeholder="请输入系统描述" />
+      <NFormItem
+        path="SITE_DESCRIPTION"
+        :label="getOption('SITE_DESCRIPTION')?.name || '系统描述'"
+        :feedback="getOption('SITE_DESCRIPTION')?.description"
+      >
+        <NInput
+          v-model:value="formModel.SITE_DESCRIPTION"
+          :disabled="!canUpdate"
+          type="textarea"
+          :rows="3"
+          placeholder="请输入系统描述"
+        />
       </NFormItem>
-      <NFormItem path="SITE_COPYRIGHT" :label="getOption('SITE_COPYRIGHT')?.name || '版权声明'" :feedback="getOption('SITE_COPYRIGHT')?.description">
+      <NFormItem
+        path="SITE_COPYRIGHT"
+        :label="getOption('SITE_COPYRIGHT')?.name || '版权声明'"
+        :feedback="getOption('SITE_COPYRIGHT')?.description"
+      >
         <NInput v-model:value="formModel.SITE_COPYRIGHT" :disabled="!canUpdate" placeholder="请输入版权声明" />
       </NFormItem>
       <NFormItem :label="getOption('SITE_BEIAN')?.name || '备案号'" :feedback="getOption('SITE_BEIAN')?.description">
-        <NInput v-model:value="formModel.SITE_BEIAN" :disabled="!canUpdate" placeholder="请输入备案号" :maxlength="30" show-count />
+        <NInput
+          v-model:value="formModel.SITE_BEIAN"
+          :disabled="!canUpdate"
+          placeholder="请输入备案号"
+          :maxlength="30"
+          show-count
+        />
       </NFormItem>
       <NFormItem v-if="canUpdate" label=" ">
         <NSpace>

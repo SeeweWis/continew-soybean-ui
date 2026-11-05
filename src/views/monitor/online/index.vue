@@ -125,7 +125,12 @@ function handleResetSearch() {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <NCard :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden" content-class="sm:min-h-0 sm:flex sm:flex-col">
+    <NCard
+      :bordered="false"
+      size="small"
+      class="card-wrapper sm:flex-1-hidden"
+      content-class="sm:min-h-0 sm:flex sm:flex-col"
+    >
       <div class="mb-12px flex flex-wrap items-center justify-between gap-12px">
         <NSpace>
           <NInput

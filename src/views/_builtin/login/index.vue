@@ -238,7 +238,11 @@ function handleLoginMethodChange(value: string) {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: linear-gradient(60deg, var(--n-primary-color, #3b83f6), color-mix(in srgb, var(--n-primary-color, #3b83f6) 65%, white));
+  background: linear-gradient(
+    60deg,
+    var(--n-primary-color, #3b83f6),
+    color-mix(in srgb, var(--n-primary-color, #3b83f6) 65%, white)
+  );
 }
 
 .login-visual img {
@@ -288,7 +292,12 @@ function handleLoginMethodChange(value: string) {
 .login-page :deep(.n-input),
 .login-page :deep(.n-button),
 .login-page :deep(.n-checkbox) {
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
 }
 
 .login-page :deep(.n-input) {

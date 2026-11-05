@@ -32,14 +32,16 @@ const values = ref<Record<string, unknown>>({});
 const selectedBusinessFields = ref<ApprovalSubmitField[]>([]);
 
 const selectedKeys = computed(() => new Set(selectedBusinessFields.value.map(field => field.key)));
-const availableBusinessFields = computed(() => props.businessFields.filter(field => !selectedKeys.value.has(field.key)));
+const availableBusinessFields = computed(() =>
+  props.businessFields.filter(field => !selectedKeys.value.has(field.key))
+);
 const fields = computed(() => [...props.fixedFields, ...selectedBusinessFields.value]);
 
 function reset() {
   titleValue.value = props.title;
   values.value = { ...props.initialValues };
-  selectedBusinessFields.value = props.businessFields.filter(field =>
-    props.initialBusinessFieldKeys?.includes(field.key) || Object.hasOwn(values.value, field.key)
+  selectedBusinessFields.value = props.businessFields.filter(
+    field => props.initialBusinessFieldKeys?.includes(field.key) || Object.hasOwn(values.value, field.key)
   );
   selectedBusinessFields.value.forEach(field => {
     if (!Object.hasOwn(values.value, field.key) && field.value !== undefined) values.value[field.key] = field.value;
@@ -113,8 +115,17 @@ watch(visible, show => {
 </script>
 
 <template>
-  <NModal v-model:show="visible" preset="card" :title="definitionName ? `发起${definitionName}` : '发起审批'" class="w-1100px max-w-96%" :mask-closable="!submitting" :close-on-esc="!submitting">
-    <NAlert type="info" class="mb-12px">左侧是当前业务可提交的字段。把需要审批人查看的信息拖到右侧，固定字段会始终保留。</NAlert>
+  <NModal
+    v-model:show="visible"
+    preset="card"
+    :title="definitionName ? `发起${definitionName}` : '发起审批'"
+    class="w-1100px max-w-96%"
+    :mask-closable="!submitting"
+    :close-on-esc="!submitting"
+  >
+    <NAlert type="info" class="mb-12px">
+      左侧是当前业务可提交的字段。把需要审批人查看的信息拖到右侧，固定字段会始终保留。
+    </NAlert>
     <NForm :disabled="submitting" label-placement="top">
       <NFormItem label="申请事项" required>
         <NInput v-model:value="titleValue" maxlength="200" placeholder="例如：采购办公用品" />
@@ -143,17 +154,68 @@ watch(visible, show => {
         </NCard>
         <NCard title="审批表单" size="small" embedded>
           <div class="flex-col gap-8px">
-            <div v-for="field in fixedFields" :key="`fixed-${field.key}`" class="rounded border border-solid border-gray-200 p-10px">
+            <div
+              v-for="field in fixedFields"
+              :key="`fixed-${field.key}`"
+              class="rounded border border-solid border-gray-200 p-10px"
+            >
               <NFormItem :label="field.label" :required="field.required" class="mb-0">
-                <slot :name="`field-${field.key}`" :field="field" :value="valueOf(field)" :update="(value: unknown) => updateValue(field, value)">
-                  <div v-if="field.type === 'CUSTOM' || field.type === 'ATTACHMENT'" class="text-12px text-gray-500">请通过业务页面插槽提供此字段控件</div>
-                  <NInput v-else-if="field.type === 'TEXT'" :value="textValue(field)" :placeholder="field.placeholder" @update:value="value => updateValue(field, value)" />
-                  <NInput v-else-if="field.type === 'TEXTAREA'" :value="textValue(field)" type="textarea" :placeholder="field.placeholder" @update:value="value => updateValue(field, value)" />
-                  <NInputNumber v-else-if="field.type === 'NUMBER' || field.type === 'AMOUNT'" :value="numberValue(field)" class="w-full" @update:value="value => updateValue(field, value)" />
-                  <NDatePicker v-else-if="field.type === 'DATE'" :value="numberValue(field)" type="date" class="w-full" @update:value="value => updateValue(field, value)" />
-                  <NDatePicker v-else-if="field.type === 'DATERANGE'" :value="rangeValue(field)" type="daterange" class="w-full" @update:value="value => updateValue(field, value)" />
-                  <NSelect v-else-if="field.type === 'SELECT'" :value="textValue(field)" :options="field.options" clearable @update:value="value => updateValue(field, value)" />
-                  <NRadioGroup v-else :value="textValue(field)" @update:value="value => updateValue(field, value)"><NSpace><NRadio v-for="option in field.options" :key="option.value" :value="option.value">{{ option.label }}</NRadio></NSpace></NRadioGroup>
+                <slot
+                  :name="`field-${field.key}`"
+                  :field="field"
+                  :value="valueOf(field)"
+                  :update="(value: unknown) => updateValue(field, value)"
+                >
+                  <div v-if="field.type === 'CUSTOM' || field.type === 'ATTACHMENT'" class="text-12px text-gray-500">
+                    请通过业务页面插槽提供此字段控件
+                  </div>
+                  <NInput
+                    v-else-if="field.type === 'TEXT'"
+                    :value="textValue(field)"
+                    :placeholder="field.placeholder"
+                    @update:value="value => updateValue(field, value)"
+                  />
+                  <NInput
+                    v-else-if="field.type === 'TEXTAREA'"
+                    :value="textValue(field)"
+                    type="textarea"
+                    :placeholder="field.placeholder"
+                    @update:value="value => updateValue(field, value)"
+                  />
+                  <NInputNumber
+                    v-else-if="field.type === 'NUMBER' || field.type === 'AMOUNT'"
+                    :value="numberValue(field)"
+                    class="w-full"
+                    @update:value="value => updateValue(field, value)"
+                  />
+                  <NDatePicker
+                    v-else-if="field.type === 'DATE'"
+                    :value="numberValue(field)"
+                    type="date"
+                    class="w-full"
+                    @update:value="value => updateValue(field, value)"
+                  />
+                  <NDatePicker
+                    v-else-if="field.type === 'DATERANGE'"
+                    :value="rangeValue(field)"
+                    type="daterange"
+                    class="w-full"
+                    @update:value="value => updateValue(field, value)"
+                  />
+                  <NSelect
+                    v-else-if="field.type === 'SELECT'"
+                    :value="textValue(field)"
+                    :options="field.options"
+                    clearable
+                    @update:value="value => updateValue(field, value)"
+                  />
+                  <NRadioGroup v-else :value="textValue(field)" @update:value="value => updateValue(field, value)">
+                    <NSpace>
+                      <NRadio v-for="option in field.options" :key="option.value" :value="option.value">
+                        {{ option.label }}
+                      </NRadio>
+                    </NSpace>
+                  </NRadioGroup>
                 </slot>
               </NFormItem>
             </div>
@@ -164,35 +226,106 @@ watch(visible, show => {
               :group="{ name: 'approval-submit-fields', pull: true, put: true }"
               class="min-h-160px flex-col gap-8px"
             >
-              <div v-for="field in selectedBusinessFields" :key="field.key" class="rounded border border-dashed border-primary p-10px">
-                <div class="mb-4px flex items-center justify-between text-12px text-gray-500"><span>业务字段 · {{ field.key }}</span><NButton text type="error" size="tiny" @click="removeField(field)">移除</NButton></div>
+              <div
+                v-for="field in selectedBusinessFields"
+                :key="field.key"
+                class="rounded border border-dashed border-primary p-10px"
+              >
+                <div class="mb-4px flex items-center justify-between text-12px text-gray-500">
+                  <span>业务字段 · {{ field.key }}</span>
+                  <NButton text type="error" size="tiny" @click="removeField(field)">移除</NButton>
+                </div>
                 <NFormItem :label="field.label" :required="field.required" class="mb-0">
-                  <slot :name="`field-${field.key}`" :field="field" :value="valueOf(field)" :update="(value: unknown) => updateValue(field, value)">
-                    <div v-if="field.type === 'CUSTOM' || field.type === 'ATTACHMENT'" class="text-12px text-gray-500">请通过业务页面插槽提供此字段控件</div>
-                    <NInput v-else-if="field.type === 'TEXT'" :value="textValue(field)" :placeholder="field.placeholder" @update:value="value => updateValue(field, value)" />
-                    <NInput v-else-if="field.type === 'TEXTAREA'" :value="textValue(field)" type="textarea" :placeholder="field.placeholder" @update:value="value => updateValue(field, value)" />
-                    <NInputNumber v-else-if="field.type === 'NUMBER' || field.type === 'AMOUNT'" :value="numberValue(field)" class="w-full" @update:value="value => updateValue(field, value)" />
-                    <NDatePicker v-else-if="field.type === 'DATE'" :value="numberValue(field)" type="date" class="w-full" @update:value="value => updateValue(field, value)" />
-                    <NDatePicker v-else-if="field.type === 'DATERANGE'" :value="rangeValue(field)" type="daterange" class="w-full" @update:value="value => updateValue(field, value)" />
-                    <NSelect v-else-if="field.type === 'SELECT'" :value="textValue(field)" :options="field.options" clearable @update:value="value => updateValue(field, value)" />
-                    <NRadioGroup v-else :value="textValue(field)" @update:value="value => updateValue(field, value)"><NSpace><NRadio v-for="option in field.options" :key="option.value" :value="option.value">{{ option.label }}</NRadio></NSpace></NRadioGroup>
+                  <slot
+                    :name="`field-${field.key}`"
+                    :field="field"
+                    :value="valueOf(field)"
+                    :update="(value: unknown) => updateValue(field, value)"
+                  >
+                    <div v-if="field.type === 'CUSTOM' || field.type === 'ATTACHMENT'" class="text-12px text-gray-500">
+                      请通过业务页面插槽提供此字段控件
+                    </div>
+                    <NInput
+                      v-else-if="field.type === 'TEXT'"
+                      :value="textValue(field)"
+                      :placeholder="field.placeholder"
+                      @update:value="value => updateValue(field, value)"
+                    />
+                    <NInput
+                      v-else-if="field.type === 'TEXTAREA'"
+                      :value="textValue(field)"
+                      type="textarea"
+                      :placeholder="field.placeholder"
+                      @update:value="value => updateValue(field, value)"
+                    />
+                    <NInputNumber
+                      v-else-if="field.type === 'NUMBER' || field.type === 'AMOUNT'"
+                      :value="numberValue(field)"
+                      class="w-full"
+                      @update:value="value => updateValue(field, value)"
+                    />
+                    <NDatePicker
+                      v-else-if="field.type === 'DATE'"
+                      :value="numberValue(field)"
+                      type="date"
+                      class="w-full"
+                      @update:value="value => updateValue(field, value)"
+                    />
+                    <NDatePicker
+                      v-else-if="field.type === 'DATERANGE'"
+                      :value="rangeValue(field)"
+                      type="daterange"
+                      class="w-full"
+                      @update:value="value => updateValue(field, value)"
+                    />
+                    <NSelect
+                      v-else-if="field.type === 'SELECT'"
+                      :value="textValue(field)"
+                      :options="field.options"
+                      clearable
+                      @update:value="value => updateValue(field, value)"
+                    />
+                    <NRadioGroup v-else :value="textValue(field)" @update:value="value => updateValue(field, value)">
+                      <NSpace>
+                        <NRadio v-for="option in field.options" :key="option.value" :value="option.value">
+                          {{ option.label }}
+                        </NRadio>
+                      </NSpace>
+                    </NRadioGroup>
                   </slot>
                 </NFormItem>
               </div>
             </VueDraggable>
           </div>
-          <NEmpty v-if="!fixedFields.length && !selectedBusinessFields.length" description="从左侧选择需要提交的业务字段" />
+          <NEmpty
+            v-if="!fixedFields.length && !selectedBusinessFields.length"
+            description="从左侧选择需要提交的业务字段"
+          />
         </NCard>
       </div>
     </NForm>
     <NCard v-if="flowPreview?.length" title="审批流程预览" size="small" embedded class="mt-12px">
       <NSteps vertical size="small">
-        <NStep v-for="(node, index) in flowPreview" :key="node.id" :title="node.name" :description="node.approveMode === 'AND' ? '会签：所有审批人同意' : '或签：任一审批人同意'" :status="index === 0 ? 'process' : 'wait'" />
+        <NStep
+          v-for="(node, index) in flowPreview"
+          :key="node.id"
+          :title="node.name"
+          :description="node.approveMode === 'AND' ? '会签：所有审批人同意' : '或签：任一审批人同意'"
+          :status="index === 0 ? 'process' : 'wait'"
+        />
       </NSteps>
     </NCard>
     <template #footer>
       <NSpace justify="end">
-        <NButton :disabled="submitting" @click="emit('cancel'); visible = false">取消</NButton>
+        <NButton
+          :disabled="submitting"
+          @click="
+            emit('cancel');
+            visible = false;
+          "
+        >
+          取消
+        </NButton>
         <NButton type="primary" :loading="submitting" @click="submit">提交审批</NButton>
       </NSpace>
     </template>

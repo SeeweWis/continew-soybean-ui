@@ -7,7 +7,13 @@ import { fetchGetUserDict } from '@/service/api/system';
 import { useNaiveForm } from '@/hooks/common/form';
 import { parseFlowConfig, serializeFlowConfig } from '../../modules/flow-config';
 import FormDesigner from './form-designer.vue';
-import { defaultFormConfig, formValueDefaults, parseFormConfig, serializeFormConfig, type FormConfig } from '../../modules/form-config';
+import {
+  defaultFormConfig,
+  formValueDefaults,
+  parseFormConfig,
+  serializeFormConfig,
+  type FormConfig
+} from '../../modules/form-config';
 import FormRenderer from '../../modules/form-renderer.vue';
 
 const props = defineProps<{ id?: CommonType.IdType; readonly?: boolean }>();
@@ -41,7 +47,15 @@ const rules: FormRules = {
 };
 
 function createModel(): Api.Approval.DefinitionReq {
-  return { code: '', name: '', category: '', description: '', status: 1, flowConfig: '', formConfig: serializeFormConfig(defaultFormConfig()) };
+  return {
+    code: '',
+    name: '',
+    category: '',
+    description: '',
+    status: 1,
+    flowConfig: '',
+    formConfig: serializeFormConfig(defaultFormConfig())
+  };
 }
 
 function addNode() {
@@ -97,7 +111,15 @@ async function load() {
       return;
     }
     const { code, name, category, description, status, flowConfig, formConfig: config } = data;
-    model.value = { code, name, category, description, status, flowConfig, formConfig: config || serializeFormConfig(defaultFormConfig()) };
+    model.value = {
+      code,
+      name,
+      category,
+      description,
+      status,
+      flowConfig,
+      formConfig: config || serializeFormConfig(defaultFormConfig())
+    };
     try {
       nodes.value = parseFlowConfig(flowConfig);
     } catch (cause) {
@@ -235,7 +257,9 @@ watch(visible, show => {
             <NAlert v-if="configError" type="error" class="mb-16px">
               {{ configError }}。原始配置已保留，当前禁止覆盖保存。
             </NAlert>
-            <NAlert v-else type="info" class="mb-16px">按排列顺序审批。会签需全部审批人同意，或签任一人同意即可。</NAlert>
+            <NAlert v-else type="info" class="mb-16px">
+              按排列顺序审批。会签需全部审批人同意，或签任一人同意即可。
+            </NAlert>
             <NAlert v-if="usersError && !readonly" type="error" class="mb-16px">
               审批人加载失败。
               <NButton text type="primary" @click="loadUsers">重试</NButton>
@@ -245,7 +269,9 @@ watch(visible, show => {
                 <template v-if="!readonly" #header-extra>
                   <NSpace size="small">
                     <NButton size="tiny" :disabled="index === 0 || saving" @click="moveNode(index, -1)">上移</NButton>
-                    <NButton size="tiny" :disabled="index === nodes.length - 1 || saving" @click="moveNode(index, 1)">下移</NButton>
+                    <NButton size="tiny" :disabled="index === nodes.length - 1 || saving" @click="moveNode(index, 1)">
+                      下移
+                    </NButton>
                     <NButton size="tiny" type="error" :disabled="saving" @click="nodes.splice(index, 1)">删除</NButton>
                   </NSpace>
                 </template>
@@ -273,12 +299,16 @@ watch(visible, show => {
                 </NFormItem>
               </NCard>
               <NEmpty v-if="!nodes.length && !configError" description="尚未添加审批节点" />
-              <NButton v-if="!readonly && !configError" dashed :disabled="saving" @click="addNode">添加审批节点</NButton>
+              <NButton v-if="!readonly && !configError" dashed :disabled="saving" @click="addNode">
+                添加审批节点
+              </NButton>
             </div>
           </template>
 
           <template v-else-if="step === 3">
-            <NAlert type="info" class="mb-16px">拖动左侧字段到画布，或点击组件快速添加。字段编码保存后用于提交数据，请避免随意修改。</NAlert>
+            <NAlert type="info" class="mb-16px">
+              拖动左侧字段到画布，或点击组件快速添加。字段编码保存后用于提交数据，请避免随意修改。
+            </NAlert>
             <FormDesigner ref="designerRef" v-model="formConfig" :readonly="readonly" />
           </template>
 

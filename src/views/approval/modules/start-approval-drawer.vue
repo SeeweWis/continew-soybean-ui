@@ -107,8 +107,10 @@ async function submit() {
   }
   const missing = formConfig.value.fields.find(field => {
     const value = formData.value[field.key];
-    return field.required
-      && (value == null || (typeof value === 'string' && !value.trim()) || (Array.isArray(value) && !value.length));
+    return (
+      field.required &&
+      (value == null || (typeof value === 'string' && !value.trim()) || (Array.isArray(value) && !value.length))
+    );
   });
   if (missing) {
     window.$message?.warning(`请填写：${missing.label}`);
@@ -133,14 +135,23 @@ async function submit() {
   }
 }
 
-watch(() => formModel.definitionCode, code => void loadFlow(code));
+watch(
+  () => formModel.definitionCode,
+  code => void loadFlow(code)
+);
 watch(visible, show => {
   if (show && hasAuth('approval:definition:list')) void load();
 });
 </script>
 
 <template>
-  <NDrawer v-model:show="visible" :width="1000" class="max-w-95%" :mask-closable="!submitting" :close-on-esc="!submitting">
+  <NDrawer
+    v-model:show="visible"
+    :width="1000"
+    class="max-w-95%"
+    :mask-closable="!submitting"
+    :close-on-esc="!submitting"
+  >
     <NDrawerContent title="发起审批" :native-scrollbar="false" :closable="!submitting">
       <NSpin :show="loading">
         <NAlert v-if="!hasAuth('approval:instance:start') || !hasAuth('approval:definition:list')" type="warning">
@@ -155,12 +166,22 @@ watch(visible, show => {
           <NGrid cols="1 m:2" responsive="screen" :x-gap="24">
             <NGridItem>
               <NFormItem label="审批类型" path="definitionCode">
-                <NSelect v-model:value="formModel.definitionCode" :options="options" :loading="loading" filterable placeholder="请选择要办理的事项" />
+                <NSelect
+                  v-model:value="formModel.definitionCode"
+                  :options="options"
+                  :loading="loading"
+                  filterable
+                  placeholder="请选择要办理的事项"
+                />
               </NFormItem>
               <NAlert v-if="selected?.description" type="info" class="mb-16px">{{ selected.description }}</NAlert>
               <NDivider title-placement="left">填写申请</NDivider>
               <NFormItem label="申请事项" path="title">
-                <NInput v-model:value="formModel.title" :maxlength="200" placeholder="例如：2026 年 5 月 10 日至 12 日年假" />
+                <NInput
+                  v-model:value="formModel.title"
+                  :maxlength="200"
+                  placeholder="例如：2026 年 5 月 10 日至 12 日年假"
+                />
               </NFormItem>
               <FormRenderer v-model="formData" :config="formConfig" />
               <NAlert type="info">提交后将按照右侧流程依次审批；已提交申请使用当前流程快照。</NAlert>
@@ -174,7 +195,13 @@ watch(visible, show => {
                     <NButton text @click="loadFlow(formModel.definitionCode)">重试</NButton>
                   </NAlert>
                   <NSteps v-else-if="previewNodes.length" vertical size="small">
-                    <NStep v-for="(node, index) in previewNodes" :key="node.id" :title="node.name" :description="`${node.approveMode === 'AND' ? '所有审批人同意后通过' : '任一审批人同意后通过'} · ${node.approvers.map(approverName).join('、')}`" :status="index === 0 ? 'process' : 'wait'" />
+                    <NStep
+                      v-for="(node, index) in previewNodes"
+                      :key="node.id"
+                      :title="node.name"
+                      :description="`${node.approveMode === 'AND' ? '所有审批人同意后通过' : '任一审批人同意后通过'} · ${node.approvers.map(approverName).join('、')}`"
+                      :status="index === 0 ? 'process' : 'wait'"
+                    />
                   </NSteps>
                   <NEmpty v-else description="此审批模板没有可执行的节点" />
                 </NSpin>
@@ -186,7 +213,14 @@ watch(visible, show => {
       <template #footer>
         <NSpace justify="end">
           <NButton :disabled="submitting" @click="visible = false">取消</NButton>
-          <NButton type="primary" :loading="submitting" :disabled="loading || failed || flowLoading || !previewNodes.length" @click="submit">提交审批</NButton>
+          <NButton
+            type="primary"
+            :loading="submitting"
+            :disabled="loading || failed || flowLoading || !previewNodes.length"
+            @click="submit"
+          >
+            提交审批
+          </NButton>
         </NSpace>
       </template>
     </NDrawerContent>

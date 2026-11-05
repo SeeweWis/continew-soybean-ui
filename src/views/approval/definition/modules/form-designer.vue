@@ -23,7 +23,12 @@ function add(type: FormFieldType) {
 }
 
 function cloneField(field: FormField) {
-  return { ...field, id: `${field.id}_${Date.now()}`, key: `${field.key}_copy`, options: field.options?.map(option => ({ ...option })) };
+  return {
+    ...field,
+    id: `${field.id}_${Date.now()}`,
+    key: `${field.key}_copy`,
+    options: field.options?.map(option => ({ ...option }))
+  };
 }
 
 function clonePalette(item: { value: FormFieldType }) {
@@ -46,7 +51,10 @@ function copy(field: FormField) {
 
 function updateField(patch: Partial<FormField>) {
   if (!selected.value) return;
-  update({ ...props.modelValue, fields: props.modelValue.fields.map(field => field.id === selected.value?.id ? { ...field, ...patch } : field) });
+  update({
+    ...props.modelValue,
+    fields: props.modelValue.fields.map(field => (field.id === selected.value?.id ? { ...field, ...patch } : field))
+  });
 }
 
 function updateType(type: FormFieldType) {
@@ -81,7 +89,13 @@ defineExpose({ validate });
         :clone="clonePalette"
         class="flex-col gap-8px"
       >
-        <NButton v-for="item in fieldTypeOptions" :key="item.value" secondary :disabled="readonly" @click="add(item.value)">
+        <NButton
+          v-for="item in fieldTypeOptions"
+          :key="item.value"
+          secondary
+          :disabled="readonly"
+          @click="add(item.value)"
+        >
           {{ item.label }}
         </NButton>
       </VueDraggable>
@@ -97,7 +111,7 @@ defineExpose({ validate });
         :clone="cloneField"
         class="min-h-180px flex-col gap-8px"
         @update:model-value="(fields: FormField[]) => update({ ...modelValue, fields })"
-        @add="event => selectedId = modelValue.fields[event.newIndex!]?.id"
+        @add="event => (selectedId = modelValue.fields[event.newIndex!]?.id)"
       >
         <div
           v-for="field in modelValue.fields"
@@ -113,7 +127,9 @@ defineExpose({ validate });
               <NButton text type="error" size="tiny" @click.stop="remove(field)">删除</NButton>
             </NSpace>
           </div>
-          <div class="mt-4px text-12px text-gray-500">{{ fieldTypeOptions.find(item => item.value === field.type)?.label }} · {{ field.key }}</div>
+          <div class="mt-4px text-12px text-gray-500">
+            {{ fieldTypeOptions.find(item => item.value === field.type)?.label }} · {{ field.key }}
+          </div>
         </div>
       </VueDraggable>
       <NEmpty v-if="!modelValue.fields.length" description="从左侧添加字段" />
@@ -133,7 +149,9 @@ defineExpose({ validate });
         <NFormItem label="提示文字">
           <NInput :value="selectedField.placeholder" @update:value="value => updateField({ placeholder: value })" />
         </NFormItem>
-        <NCheckbox :checked="selectedField.required" @update:checked="value => updateField({ required: value })">必填</NCheckbox>
+        <NCheckbox :checked="selectedField.required" @update:checked="value => updateField({ required: value })">
+          必填
+        </NCheckbox>
         <template v-if="selectedField.type === 'TEXT' || selectedField.type === 'TEXTAREA'">
           <NFormItem label="最大长度" class="mt-12px">
             <NInputNumber
@@ -141,26 +159,55 @@ defineExpose({ validate });
               :min="1"
               :max="5000"
               class="w-full"
-              @update:value="value => updateField({ validation: { ...selectedField.validation, maxLength: value ?? undefined } })"
+              @update:value="
+                value => updateField({ validation: { ...selectedField.validation, maxLength: value ?? undefined } })
+              "
             />
           </NFormItem>
         </template>
         <template v-if="selectedField.type === 'NUMBER' || selectedField.type === 'AMOUNT'">
           <NFormItem label="最小值" class="mt-12px">
-            <NInputNumber :value="selectedField.validation?.min" class="w-full" @update:value="value => updateField({ validation: { ...selectedField.validation, min: value ?? undefined } })" />
+            <NInputNumber
+              :value="selectedField.validation?.min"
+              class="w-full"
+              @update:value="
+                value => updateField({ validation: { ...selectedField.validation, min: value ?? undefined } })
+              "
+            />
           </NFormItem>
           <NFormItem label="最大值">
-            <NInputNumber :value="selectedField.validation?.max" class="w-full" @update:value="value => updateField({ validation: { ...selectedField.validation, max: value ?? undefined } })" />
+            <NInputNumber
+              :value="selectedField.validation?.max"
+              class="w-full"
+              @update:value="
+                value => updateField({ validation: { ...selectedField.validation, max: value ?? undefined } })
+              "
+            />
           </NFormItem>
         </template>
         <template v-if="selectedField.type === 'SELECT' || selectedField.type === 'RADIO'">
           <NDivider title-placement="left">选项</NDivider>
-          <div v-for="(option, index) in selectedField.options" :key="`${selectedField.id}-${index}`" class="mb-8px flex gap-4px">
+          <div
+            v-for="(option, index) in selectedField.options"
+            :key="`${selectedField.id}-${index}`"
+            class="mb-8px flex gap-4px"
+          >
             <NInput v-model:value="option.label" placeholder="名称" />
             <NInput v-model:value="option.value" placeholder="值" />
             <NButton text type="error" @click="selectedField.options?.splice(index, 1)">删</NButton>
           </div>
-          <NButton dashed block @click="selectedField.options?.push({ label: `选项 ${(selectedField.options?.length ?? 0) + 1}`, value: `option_${Date.now()}` })">添加选项</NButton>
+          <NButton
+            dashed
+            block
+            @click="
+              selectedField.options?.push({
+                label: `选项 ${(selectedField.options?.length ?? 0) + 1}`,
+                value: `option_${Date.now()}`
+              })
+            "
+          >
+            添加选项
+          </NButton>
         </template>
       </NForm>
     </NCard>

@@ -35,7 +35,9 @@ function rangeValue(field: FormField) {
 function optionLabel(field: FormField, value: unknown) {
   if (field.type === 'DATE' && typeof value === 'number') return new Date(value).toLocaleDateString('zh-CN');
   if (field.type === 'DATERANGE' && Array.isArray(value)) {
-    return value.map(item => typeof item === 'number' ? new Date(item).toLocaleDateString('zh-CN') : item).join(' 至 ');
+    return value
+      .map(item => (typeof item === 'number' ? new Date(item).toLocaleDateString('zh-CN') : item))
+      .join(' 至 ');
   }
   if (Array.isArray(value)) return value.join(' 至 ');
   return field.options?.find(option => option.value === String(value))?.label ?? String(value ?? '—');

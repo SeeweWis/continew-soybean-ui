@@ -135,11 +135,7 @@ function handleExport() {
                 />
               </NFormItemGi>
               <NFormItemGi span="24 s:12 m:8" label="发送状态" class="pr-24px">
-                <DictSelect
-                  v-model:value="searchParams.status"
-                  dict-code="success_failure_status_enum"
-                  clearable
-                />
+                <DictSelect v-model:value="searchParams.status" dict-code="success_failure_status_enum" clearable />
               </NFormItemGi>
               <NFormItemGi span="24 s:12 m:8" class="pr-24px">
                 <NSpace class="w-full" justify="end">

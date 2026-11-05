@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import { parseFlowConfig, serializeFlowConfig } from '../src/views/approval/modules/flow-config';
-import { defaultFormConfig, parseFormConfig, serializeFormConfig, validateFormConfig } from '../src/views/approval/modules/form-config';
+import {
+  defaultFormConfig,
+  parseFormConfig,
+  serializeFormConfig,
+  validateFormConfig
+} from '../src/views/approval/modules/form-config';
 
 const userId = '9223372036854775000';
 const nodes = [

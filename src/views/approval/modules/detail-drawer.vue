@@ -188,7 +188,9 @@ watch(visible, show => {
           </NCollapse>
           <NDivider title-placement="left">申请内容</NDivider>
           <FormRenderer v-if="detail.instance.formConfig" :config="formConfig" :model-value="formValues" readonly />
-          <pre v-else class="max-h-320px overflow-auto whitespace-pre-wrap break-all rounded bg-layout p-12px">{{ formContent }}</pre>
+          <pre v-else class="max-h-320px overflow-auto whitespace-pre-wrap break-all rounded bg-layout p-12px">{{
+            formContent
+          }}</pre>
           <NDivider title-placement="left">审批任务</NDivider>
           <NDataTable
             :columns="taskColumns"
@@ -267,13 +269,7 @@ watch(visible, show => {
     </NAlert>
     <NForm :disabled="processing">
       <NFormItem v-if="action === 'transfer'" label="转办用户" required>
-        <NSelect
-          v-model:value="target"
-          :options="users"
-          :loading="usersLoading"
-          filterable
-          placeholder="选择用户"
-        />
+        <NSelect v-model:value="target" :options="users" :loading="usersLoading" filterable placeholder="选择用户" />
       </NFormItem>
       <NAlert v-if="action === 'transfer' && usersFailed" type="error" class="mb-16px">
         用户加载失败。

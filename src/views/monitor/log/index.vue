@@ -159,11 +159,7 @@ function handleResetSearch() {
                 <NInput v-model:value="searchParams.ip" placeholder="请输入操作 IP" />
               </NFormItemGi>
               <NFormItemGi span="24 s:12 m:8" label="操作状态" class="pr-24px">
-                <DictSelect
-                  v-model:value="searchParams.status"
-                  dict-code="log_status_enum"
-                  clearable
-                />
+                <DictSelect v-model:value="searchParams.status" dict-code="log_status_enum" clearable />
               </NFormItemGi>
               <NFormItemGi span="24 s:12 m:8" label="操作人" class="pr-24px">
                 <NInput v-model:value="searchParams.createUserString" placeholder="请输入操作人" />

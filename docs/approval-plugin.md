@@ -24,21 +24,21 @@
 
 请求使用现有 Authorization 认证头，响应继续由全局 R 包装。分页请求为 page/size，结果为 list/total。雪花 ID 使用 string | number，大于 JS 安全整数范围时以字符串传输。
 
-| 请求 | 用途 | 权限 |
-| --- | --- | --- |
-| GET /approval/definition/list | 定义列表，name/category/status | approval:definition:list |
-| GET /approval/definition/{id} | 定义详情，包含 flowConfig、formConfig 字符串 | approval:definition:get |
-| POST /approval/definition | 新增定义，提交 flowConfig、formConfig | approval:definition:create |
-| PUT /approval/definition/{id} | 更新定义，编码不可改变，提交 flowConfig、formConfig | approval:definition:update |
-| DELETE /approval/definition | 请求体 { ids: [...] } | approval:definition:delete |
-| POST /approval/instance/start | 发起，返回实例 ID | approval:instance:start |
-| GET /approval/instance | 我的申请，可筛选 title/businessType/status | approval:instance:list |
-| GET /approval/instance/{id} | instance/tasks/history/userNames | approval:instance:get |
-| POST /approval/instance/cancel/{id} | reason，仅发起人可撤销 | approval:instance:cancel |
-| GET /approval/task | 我的任务，title、completed=false/true | approval:task:list |
-| POST /approval/task/approve/{id} | opinion/attachments | approval:task:approve |
-| POST /approval/task/reject/{id} | opinion/attachments | approval:task:reject |
-| POST /approval/task/transfer/{id} | toUserId/reason | approval:task:transfer |
+| 请求                                | 用途                                                | 权限                       |
+| ----------------------------------- | --------------------------------------------------- | -------------------------- |
+| GET /approval/definition/list       | 定义列表，name/category/status                      | approval:definition:list   |
+| GET /approval/definition/{id}       | 定义详情，包含 flowConfig、formConfig 字符串        | approval:definition:get    |
+| POST /approval/definition           | 新增定义，提交 flowConfig、formConfig               | approval:definition:create |
+| PUT /approval/definition/{id}       | 更新定义，编码不可改变，提交 flowConfig、formConfig | approval:definition:update |
+| DELETE /approval/definition         | 请求体 { ids: [...] }                               | approval:definition:delete |
+| POST /approval/instance/start       | 发起，返回实例 ID                                   | approval:instance:start    |
+| GET /approval/instance              | 我的申请，可筛选 title/businessType/status          | approval:instance:list     |
+| GET /approval/instance/{id}         | instance/tasks/history/userNames                    | approval:instance:get      |
+| POST /approval/instance/cancel/{id} | reason，仅发起人可撤销                              | approval:instance:cancel   |
+| GET /approval/task                  | 我的任务，title、completed=false/true               | approval:task:list         |
+| POST /approval/task/approve/{id}    | opinion/attachments                                 | approval:task:approve      |
+| POST /approval/task/reject/{id}     | opinion/attachments                                 | approval:task:reject       |
+| POST /approval/task/transfer/{id}   | toUserId/reason                                     | approval:task:transfer     |
 
 业务内容使用 `formData` JSON 保存，固定字段由定义中的 `formConfig` 决定，业务页面可在提交弹窗中加入扩展字段。附件接口字段保持兼容，附件上传控件通过弹窗插槽接入；字段联动和嵌套表格仍需具体业务确认后再扩展。
 

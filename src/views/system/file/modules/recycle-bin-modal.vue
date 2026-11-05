@@ -90,7 +90,9 @@ onMounted(() => refresh());
           @keyup.enter="refresh(true)"
         >
           <template #suffix>
-            <ButtonIcon text aria-label="查询" tooltip-content="查询" @click="refresh(true)"><SvgIcon icon="lucide:search" /></ButtonIcon>
+            <ButtonIcon text aria-label="查询" tooltip-content="查询" @click="refresh(true)">
+              <SvgIcon icon="lucide:search" />
+            </ButtonIcon>
           </template>
         </NInput>
         <NButton
@@ -114,12 +116,7 @@ onMounted(() => refresh());
           <template #icon><SvgIcon icon="lucide:trash-2" /></template>
           清空回收站
         </NButton>
-        <ButtonIcon
-          aria-label="刷新"
-          tooltip-content="刷新"
-          :loading="loading"
-          @click="refresh()"
-        >
+        <ButtonIcon aria-label="刷新" tooltip-content="刷新" :loading="loading" @click="refresh()">
           <SvgIcon icon="lucide:refresh-cw" />
         </ButtonIcon>
       </NSpace>
