@@ -1,7 +1,13 @@
 <script setup lang="tsx">
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
+import { NTag } from 'naive-ui';
 import { useLoading } from '@sa/hooks';
-import { fetchAssignRoleUser, fetchGetRoleUserPage, fetchUnassignRoleUser, fetchGetUserDict } from '@/service/api/system';
+import {
+  fetchAssignRoleUser,
+  fetchGetRoleUserPage,
+  fetchUnassignRoleUser,
+  fetchGetUserDict
+} from '@/service/api/system';
 import { useAuth } from '@/hooks/business/auth';
 import { defaultTransform, useNaivePaginatedTable } from '@/hooks/common/table';
 import { $t } from '@/locales';
@@ -9,25 +15,15 @@ import ButtonIcon from '@/components/custom/button-icon.vue';
 import DictTag from '@/components/custom/dict-tag.vue';
 
 defineOptions({
-  name: 'RoleAuthUserDrawer'
+  name: 'RoleUserPanel'
 });
 
 interface Props {
-  /** the edit row data */
-  rowData?: Api.System.ContinewRole | null;
+  /** 当前选中角色 */
+  role: Api.System.ContinewRole | null;
 }
 
 const props = defineProps<Props>();
-
-interface Emits {
-  (e: 'submitted'): void;
-}
-
-const emit = defineEmits<Emits>();
-
-const visible = defineModel<boolean>('visible', {
-  default: false
-});
 
 const { hasAuth } = useAuth();
 const { loading, startLoading, endLoading } = useLoading();
@@ -43,7 +39,7 @@ const searchParams = reactive<Api.System.ContinewRoleUserQuery>({
 
 const { columns, data, getData, loading: tableLoading, mobilePagination, scrollX } =
   useNaivePaginatedTable({
-    api: () => fetchGetRoleUserPage(props.rowData!.id, searchParams),
+    api: () => fetchGetRoleUserPage(props.role!.id, searchParams),
     transform: response => defaultTransform(response),
     onPaginationParamsChange: params => {
       searchParams.page = params.page ?? 1;
@@ -81,7 +77,7 @@ const { columns, data, getData, loading: tableLoading, mobilePagination, scrollX
         align: 'center',
         width: 80,
         render: row => {
-          if (!hasAuth('system:role:unassign')) return null;
+          if (!hasAuth('system:role:unassign') || props.role?.isSystem) return null;
           return (
             <ButtonIcon
               text
@@ -100,7 +96,10 @@ const { columns, data, getData, loading: tableLoading, mobilePagination, scrollX
 async function getUserOptions() {
   const { data: dictList, error } = await fetchGetUserDict();
   if (!error) {
-    userOptions.value = dictList.map(item => ({ label: String(item.label), value: item.value as CommonType.IdType }));
+    userOptions.value = dictList.map(item => ({
+      label: String(item.label),
+      value: item.value as CommonType.IdType
+    }));
   }
 }
 
@@ -110,13 +109,12 @@ async function handleAssign() {
     return;
   }
   startLoading();
-  const { error } = await fetchAssignRoleUser(props.rowData!.id, assignUserIds.value);
+  const { error } = await fetchAssignRoleUser(props.role!.id, assignUserIds.value);
   endLoading();
   if (error) return;
   window.$message?.success('分配用户成功');
   assignUserIds.value = [];
   await getData();
-  emit('submitted');
 }
 
 async function handleUnassign(userId: CommonType.IdType) {
@@ -124,22 +122,34 @@ async function handleUnassign(userId: CommonType.IdType) {
   if (error) return;
   window.$message?.success('取消授权成功');
   await getData();
-  emit('submitted');
 }
 
-watch(visible, val => {
-  if (val) {
-    getData();
-    getUserOptions();
-  }
-});
+const canAssign = computed(() => hasAuth('system:role:assign') && props.role && !props.role.isSystem);
+
+watch(
+  () => props.role?.id,
+  val => {
+    if (val) {
+      getData();
+      getUserOptions();
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
-  <NDrawer v-model:show="visible" display-directive="show" :width="700" class="max-w-90%">
-    <NDrawerContent title="分配用户" :native-scrollbar="false" closable>
-      <div class="flex-col-stretch gap-12px">
-        <NSpace v-if="hasAuth('system:role:assign')">
+  <div class="h-full flex-col-stretch gap-12px">
+    <NCard :bordered="false" size="small" class="card-wrapper">
+      <div class="flex flex-wrap items-center justify-between gap-12px">
+        <div class="flex items-center gap-8px">
+          <span class="font-medium">当前角色：</span>
+          <NTag type="primary" size="small" :bordered="false">
+            {{ role ? `${role.name}（${role.code}）` : '请选择左侧角色' }}
+          </NTag>
+          <NTag v-if="role?.isSystem" type="warning" size="small" :bordered="false">内置角色</NTag>
+        </div>
+        <NSpace v-if="canAssign" :size="12" align="center">
           <NSelect
             v-model:value="assignUserIds"
             multiple
@@ -147,25 +157,27 @@ watch(visible, val => {
             clearable
             :options="userOptions"
             placeholder="请选择要分配的用户"
-            class="w-360px"
+            class="w-320px"
             :max-tag-count="3"
           />
-          <NButton type="primary" :loading="loading" @click="handleAssign">分配用户</NButton>
+          <NButton type="primary" size="small" :loading="loading" @click="handleAssign">分配用户</NButton>
         </NSpace>
-        <NDataTable
-          :columns="columns"
-          :data="data"
-          size="small"
-          :scroll-x="scrollX"
-          :loading="tableLoading"
-          remote
-          :row-key="row => row.id"
-          :pagination="mobilePagination"
-          class="h-full"
-        />
       </div>
-    </NDrawerContent>
-  </NDrawer>
+    </NCard>
+    <NCard :bordered="false" size="small" class="card-wrapper flex-1-hidden">
+      <NDataTable
+        :columns="columns"
+        :data="data"
+        size="small"
+        :scroll-x="scrollX"
+        :loading="tableLoading"
+        remote
+        :row-key="row => row.id"
+        :pagination="mobilePagination"
+        class="h-full"
+      />
+    </NCard>
+  </div>
 </template>
 
 <style scoped></style>

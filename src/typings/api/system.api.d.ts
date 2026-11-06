@@ -88,6 +88,9 @@ declare namespace Api {
       title: string;
       parentId: CommonType.IdType;
       type: 1 | 2 | 3;
+      /** 终端类型（PC 桌面端、XCX 小程序、ANDROID 安卓；按钮继承上级菜单） */
+      clientType?: 'PC' | 'XCX' | 'ANDROID';
+      icon?: string;
       permission?: string;
       children?: ContinewRolePermission[];
     };

@@ -53,10 +53,11 @@ export function fetchBatchDeleteRole(ids: CommonType.IdType[]) {
 }
 
 /** 获取角色功能权限树 */
-export function fetchGetRolePermissionTree() {
+export function fetchGetRolePermissionTree(params?: Api.System.ContinewMenuQuery) {
   return request<Api.System.ContinewRolePermission[]>({
     url: '/system/role/permission/tree',
-    method: 'get'
+    method: 'get',
+    params
   });
 }
 

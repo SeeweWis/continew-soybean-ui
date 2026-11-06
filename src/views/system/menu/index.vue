@@ -8,6 +8,7 @@ import { useNaiveTable } from '@/hooks/common/table';
 import { $t } from '@/locales';
 import ButtonIcon from '@/components/custom/button-icon.vue';
 import DictTag from '@/components/custom/dict-tag.vue';
+import SvgIcon from '@/components/custom/svg-icon.vue';
 import MenuOperateDrawer from './modules/menu-operate-drawer.vue';
 
 defineOptions({
@@ -32,12 +33,6 @@ const terminalTabs: { value: 'PC' | 'XCX' | 'ANDROID'; label: string }[] = [
   { value: 'ANDROID', label: '安卓' }
 ];
 
-function handleTabChange(value: 'PC' | 'XCX' | 'ANDROID') {
-  activeTab.value = value;
-  searchParams.value.clientType = value;
-  getData();
-}
-
 const { columns, columnChecks, data, getData, loading, scrollX } = useNaiveTable({
   api: () => fetchGetMenuTree(searchParams.value),
   transform: response => response.data ?? [],
@@ -60,7 +55,8 @@ const { columns, columnChecks, data, getData, loading, scrollX } = useNaiveTable
       title: '图标',
       align: 'center',
       width: 80,
-      render: row => (row.icon ? <span class="iconify text-16px">{row.icon}</span> : null)
+      render: row =>
+        row.icon ? <SvgIcon icon={row.icon} class="inline-block align-middle text-18px" /> : null
     },
     {
       key: 'path',
@@ -162,6 +158,12 @@ const { columns, columnChecks, data, getData, loading, scrollX } = useNaiveTable
     }
   ]
 });
+
+function handleTabChange(value: 'PC' | 'XCX' | 'ANDROID') {
+  activeTab.value = value;
+  searchParams.value.clientType = value;
+  getData();
+}
 
 const drawerVisible = ref(false);
 const operateType = ref<NaiveUI.TableOperateType>('add');

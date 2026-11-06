@@ -4,6 +4,8 @@ import { jsonClone } from '@sa/utils';
 import { fetchCreateMenu, fetchUpdateMenu } from '@/service/api/system';
 import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
+import SvgIcon from '@/components/custom/svg-icon.vue';
+import mdiIconNames from '@/constants/mdi-icon-names.json';
 
 defineOptions({
   name: 'MenuOperateDrawer'
@@ -45,6 +47,25 @@ const clientTypeOptions = [
   { label: '安卓（ANDROID）', value: 'ANDROID' }
 ];
 
+const mdiNames = mdiIconNames as string[];
+const iconPickerVisible = ref(false);
+const iconSearch = ref('');
+const iconPage = ref(1);
+const iconPageSize = 56;
+const filteredMdiNames = computed(() => {
+  const keyword = iconSearch.value.trim().toLowerCase().replace(/^mdi:/, '');
+  return keyword ? mdiNames.filter(name => name.includes(keyword)) : mdiNames;
+});
+const iconPageCount = computed(() => Math.max(1, Math.ceil(filteredMdiNames.value.length / iconPageSize)));
+const mdiIconOptions = computed(() => {
+  const start = (iconPage.value - 1) * iconPageSize;
+  return filteredMdiNames.value.slice(start, start + iconPageSize).map(name => `mdi:${name}`);
+});
+
+watch(iconSearch, () => {
+  iconPage.value = 1;
+});
+
 type Model = {
   parentId: CommonType.IdType | null;
   type: 1 | 2 | 3;
@@ -64,6 +85,15 @@ type Model = {
 };
 
 const model = ref<Model>(createDefaultModel());
+
+function selectMdiIcon(icon: string) {
+  model.value.icon = icon;
+  iconPickerVisible.value = false;
+}
+
+function clearIcon() {
+  model.value.icon = null;
+}
 
 function createDefaultModel(): Model {
   return {
@@ -194,7 +224,76 @@ watch(visible, () => {
           <NInput v-model:value="model.permission" placeholder="请输入权限标识，如 system:user:list" />
         </NFormItem>
         <NFormItem label="图标" path="icon">
-          <NInput v-model:value="model.icon" placeholder="请输入 iconify 图标名称" />
+          <NPopover
+            v-model:show="iconPickerVisible"
+            trigger="click"
+            placement="bottom-start"
+            :show-arrow="false"
+            :width="360"
+            style="padding: 0"
+          >
+            <template #trigger>
+              <NInput v-model:value="model.icon" readonly clearable placeholder="选择 MDI 图标" @clear="clearIcon">
+                <template #suffix>
+                  <SvgIcon :icon="model.icon || 'mdi:shape-outline'" class="text-20px" />
+                </template>
+              </NInput>
+            </template>
+            <div class="w-340px p-12px">
+              <NInput v-model:value="iconSearch" size="small" clearable placeholder="搜索 MDI 图标名称">
+                <template #prefix>
+                  <SvgIcon icon="mdi:magnify" />
+                </template>
+              </NInput>
+              <div class="mt-10px grid max-h-276px grid-cols-8 gap-4px overflow-y-auto">
+                <NTooltip v-for="icon in mdiIconOptions" :key="icon">
+                  <template #trigger>
+                    <NButton
+                      quaternary
+                      circle
+                      size="small"
+                      :type="model.icon === icon ? 'primary' : 'default'"
+                      :aria-label="icon"
+                      class="h-36px w-36px !p-0"
+                      @click="selectMdiIcon(icon)"
+                    >
+                      <SvgIcon :icon="icon" class="text-20px" />
+                    </NButton>
+                  </template>
+                  {{ icon }}
+                </NTooltip>
+                <NEmpty v-if="filteredMdiNames.length === 0" description="没有匹配的图标" class="col-span-8 py-16px" />
+              </div>
+              <div class="mt-10px flex items-center justify-between gap-8px">
+                <span class="min-w-0 truncate text-12px text-gray-400">
+                  共 {{ filteredMdiNames.length.toLocaleString() }} 个图标
+                </span>
+                <div class="flex flex-none items-center gap-6px">
+                  <NButton
+                    quaternary
+                    circle
+                    size="tiny"
+                    :disabled="iconPage <= 1"
+                    aria-label="上一页"
+                    @click="iconPage = Math.max(1, iconPage - 1)"
+                  >
+                    <SvgIcon icon="mdi:chevron-left" />
+                  </NButton>
+                  <span class="whitespace-nowrap text-12px text-gray-500">{{ iconPage }} / {{ iconPageCount }}</span>
+                  <NButton
+                    quaternary
+                    circle
+                    size="tiny"
+                    :disabled="iconPage >= iconPageCount"
+                    aria-label="下一页"
+                    @click="iconPage = Math.min(iconPageCount, iconPage + 1)"
+                  >
+                    <SvgIcon icon="mdi:chevron-right" />
+                  </NButton>
+                </div>
+              </div>
+            </div>
+          </NPopover>
         </NFormItem>
         <NFormItem label="排序" path="sort">
           <NInputNumber v-model:value="model.sort" class="w-full" placeholder="请输入排序" />
