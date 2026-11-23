@@ -30,8 +30,6 @@ declare module "@elegant-router/types" {
     "approval_definition": "/approval/definition";
     "approval_start": "/approval/start";
     "approval_task": "/approval/task";
-    "code": "/code";
-    "code_generator": "/code/generator";
     "home": "/home";
     "iframe-page": "/iframe-page/:url";
     "login": "/login/:module(pwd-login|code-login|email-login|register|reset-pwd|bind-wechat)?";
@@ -110,7 +108,6 @@ declare module "@elegant-router/types" {
     | "500"
     | "about"
     | "approval"
-    | "code"
     | "home"
     | "iframe-page"
     | "login"
@@ -150,7 +147,6 @@ declare module "@elegant-router/types" {
     | "approval_definition"
     | "approval_start"
     | "approval_task"
-    | "code_generator"
     | "home"
     | "monitor_log"
     | "monitor_online"

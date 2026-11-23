@@ -13,4 +13,3 @@ export * from './storage';
 export * from './sms-config';
 export * from './sms-log';
 export * from './open';
-export * from './code';

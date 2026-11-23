@@ -12,7 +12,6 @@ const actions: { key: RouteKey; label: string; icon: string }[] = [
   { key: 'system_role', label: $t('page.system.role.title'), icon: 'material-symbols:group-outline' },
   { key: 'system_menu', label: $t('page.system.menu.title'), icon: 'material-symbols:menu' },
   { key: 'system_file', label: '文件管理', icon: 'material-symbols:folder-outline' },
-  { key: 'code_generator', label: '代码生成', icon: 'material-symbols:code' },
   { key: 'monitor_log', label: '系统日志', icon: 'material-symbols:history' }
 ];
 </script>

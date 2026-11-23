@@ -312,8 +312,6 @@ const local: App.I18n.Schema = {
     system_file: 'File',
     system_notice_add: 'Add Notice',
     system_notice_view: 'Notice Detail',
-    code: 'Code',
-    code_generator: 'Code Generator',
     open: 'Open',
     open_app: 'Open App',
     schedule: 'Schedule',

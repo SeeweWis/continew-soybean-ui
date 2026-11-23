@@ -27,7 +27,6 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   approval_definition: () => import("@/views/approval/definition/index.vue"),
   approval_start: () => import("@/views/approval/start/index.vue"),
   approval_task: () => import("@/views/approval/task/index.vue"),
-  code_generator: () => import("@/views/code/generator/index.vue"),
   home: () => import("@/views/home/index.vue"),
   monitor_log: () => import("@/views/monitor/log/index.vue"),
   monitor_online: () => import("@/views/monitor/online/index.vue"),

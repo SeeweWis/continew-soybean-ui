@@ -98,26 +98,6 @@ export const generatedRoutes: GeneratedRoute[] = [
     ]
   },
   {
-    name: 'code',
-    path: '/code',
-    component: 'layout.base',
-    meta: {
-      title: 'code',
-      i18nKey: 'route.code'
-    },
-    children: [
-      {
-        name: 'code_generator',
-        path: '/code/generator',
-        component: 'view.code_generator',
-        meta: {
-          title: 'code_generator',
-          i18nKey: 'route.code_generator'
-        }
-      }
-    ]
-  },
-  {
     name: 'home',
     path: '/home',
     component: 'layout.base$view.home',

@@ -176,8 +176,6 @@ const routeMap: RouteMap = {
   "approval_definition": "/approval/definition",
   "approval_start": "/approval/start",
   "approval_task": "/approval/task",
-  "code": "/code",
-  "code_generator": "/code/generator",
   "home": "/home",
   "iframe-page": "/iframe-page/:url",
   "login": "/login/:module(pwd-login|code-login|email-login|register|reset-pwd|bind-wechat)?",

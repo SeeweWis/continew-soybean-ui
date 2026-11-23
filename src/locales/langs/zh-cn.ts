@@ -308,8 +308,6 @@ const local: App.I18n.Schema = {
     system_file: '文件管理',
     system_notice_add: '发布公告',
     system_notice_view: '查看公告',
-    code: '开发工具',
-    code_generator: '代码生成',
     open: '能力开放',
     open_app: '应用管理',
     schedule: '任务调度',
